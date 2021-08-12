@@ -72,19 +72,35 @@ namespace Hist {
   typedef std::tuple<TH2D*,TH2D*,TH2D*,TH2D*,TH2D*,TH2D*,TH1D*,TH1D*> DistributionList;
 
   // fill distributions in list
-  static void fill(DistributionList& dlist,int ipos,double xval,double yval,double weight=1.) {
-    switch ( ipos ) {
-    case 0:  std::get<0>(dlist)->Fill(xval,yval,weight); break;
-    case 1:  std::get<1>(dlist)->Fill(xval,yval,weight); break;
-    case 2:  std::get<2>(dlist)->Fill(xval,yval,weight); break;
-    case 3:  std::get<3>(dlist)->Fill(xval,yval,weight); break;
-    case 4:  std::get<4>(dlist)->Fill(xval,yval,weight); break;
-    case 5:  std::get<5>(dlist)->Fill(xval,yval,weight); break;
-    case 6:  std::get<6>(dlist)->Fill(xval,     weight); break;
-    case 7:  std::get<7>(dlist)->Fill(xval,     weight); break;
-    default: break;
-    }
-  }
+  // static void fill(DistributionList& dlist,int ipos,double xval,double yval,double weight=1.) {
+  //   switch ( ipos ) {
+  //   case 0:  std::get<0>(dlist)->Fill(xval,yval,weight); break;
+  //   case 1:  std::get<1>(dlist)->Fill(xval,yval,weight); break;
+  //   case 2:  std::get<2>(dlist)->Fill(xval,yval,weight); break;
+  //   case 3:  std::get<3>(dlist)->Fill(xval,yval,weight); break;
+  //   case 4:  std::get<4>(dlist)->Fill(xval,yval,weight); break;
+  //   case 5:  std::get<5>(dlist)->Fill(xval,yval,weight); break;
+  //   case 6:  std::get<6>(dlist)->Fill(xval,     weight); break;
+  //   case 7:  std::get<7>(dlist)->Fill(xval,     weight); break;
+  //   default: break;
+  //   }
+  // }
+
+  // // specialization
+  // static void fill1d(DistributionList& dlist,double xval,double weight=1.) {
+  //   switch ( ipos ) { 
+  //   case 6: std::get<6>(dlist)->Fill(xval,weight); break;
+  //   case 7: std::get<7>(dlist)->Fill(xval,weight); break;
+  //   default: break;
+  //   }
+  // }
+
+  // fill templates
+  template<int N> static void fill1d(DistributionList& dlist,double xval,            double weight=1.) { std::get<N>(dlist)->Fill(xval,     weight); }
+  template<int N> static void fill2d(DistributionList& dlist,double xval,double yval,double weight=1.) { std::get<N>(dlist)->Fill(xval,yval,weight); }
+  // specialization for 1-dim histograms
+  // template<> static void fill<6>(DistributionList& dlist,double xval,double weight=1.) { std::get<6>(dlist)->Fill(xval,weight); }
+  // template<> static void fill<7>(DistributionList& dlist,double xval,double weight=1.) { std::get<7>(dlist)->Fill(xval,weight); }
 
   HistManager* mgr() { return HistManager::instance(); }
  

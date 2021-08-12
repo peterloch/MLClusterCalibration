@@ -182,11 +182,13 @@ void ClusterTreeDemo::Loop(const std::string& outFile,Long64_t kentries) {
       if ( edep != 0. ) { 
 	double rlcw(ehad/edep); double remc(eemc/edep); double rmlc(emlc/edep); 
 	for ( auto entry : dlist  ) { 
-	  Hist::fill(entry,0,edep,remc); Hist::fill(entry,1,edep,rlcw); 
-	  Hist::fill(entry,3,flcw,remc); Hist::fill(entry,4,flcw,rlcw); 
-	  Hist::fill(entry,6,ylcw,0.  );
-	  Hist::fill(entry,7,eemc,0.  );
-	  if ( b_CalibratedE != nullptr ) { Hist::fill(entry,2,edep,rmlc); Hist::fill(entry,5,flcw,rmlc); }
+	  Hist::fill2d<0>(entry,edep,remc); 
+	  Hist::fill2d<1>(entry,edep,rlcw); 
+	  Hist::fill2d<3>(entry,flcw,remc); 
+	  Hist::fill2d<4>(entry,flcw,rlcw); 
+	  Hist::fill1d<6>(entry,ylcw     ); // 1-dim, second value "0." ignored
+	  Hist::fill1d<7>(entry,eemc     ); // 1-dim, second value "0." ignored
+	  if ( b_CalibratedE != nullptr ) { Hist::fill2d<2>(entry,edep,rmlc); Hist::fill2d<5>(entry,flcw,rmlc); }
 	}
       }
     }
