@@ -21,8 +21,8 @@ void plotClusterEnergies(const std::string& dirName="jz2_cut_2") {
   std::map<std::string,std::string> fileDictionary = { 
     { "jz2_cut_2", "JZ2_Cut2_summary.root" },
     { "jz2_cut_3", "JZ2_Cut3_summary.root" },
-    { "jz3_cut_2", "JZ2_Cut2_summary.root" },
-    { "jz3_cut_3", "JZ2_Cut3_summary.root" }
+    { "jz3_cut_2", "JZ3_Cut2_summary.root" },
+    { "jz3_cut_3", "JZ3_Cut3_summary.root" }
   }; 
   // histogram names              -------line------- -----fill----- -----key---   line order is (style,size,color,transparency) fill is (style,color,transparency)
   std::map<std::string,std::tuple<int,int,int,double,int,int,double,std::string> > histNames = { 
@@ -63,8 +63,8 @@ void plotClusterEnergies(const std::string& dirName="jz2_cut_2") {
   cvs->SetLogy(); 
   
   // double xmin(hlist.front()->GetXaxis()->GetXmin()); double xmax(hlist.front()->GetXaxis()->GetXmax());
-  double xmin(0.2 ); double ymin(0.9);    
-  double xmax(210.); ymax *= 2.;
+  double xmin(0.2 ); double ymin(0.9); ymax *= 2.;
+  double xmax = dirName.find("jz2") != std::string::npos ? 210. : 2100.;
   TH1D* _frame = new TH1D("_frame","_frame",100,xmin,xmax);
   _frame->SetMinimum(ymin); 
   _frame->SetMaximum(ymax);
