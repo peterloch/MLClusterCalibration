@@ -448,7 +448,7 @@ namespace HistUtils {
       constexpr int azure   = kAzure-9; 
       constexpr int yellow  = kYellow-10; 
       constexpr int brown   = red-5; 
-    }
-  }
-}
+    } //HistUtils::Color::Light
+  } // HistUtils::Color
+} // HistUtils
 #endif
