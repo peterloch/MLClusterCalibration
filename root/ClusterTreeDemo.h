@@ -1,3 +1,4 @@
+// -*- c++ -*-
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
 // Thu Jul 22 11:02:14 2021 by ROOT version 6.24/00
@@ -14,6 +15,8 @@
 
 #include <string>
 
+#include <cstdio>
+
 // Header file for the classes stored in the TTree if any.
 
 class ClusterTreeDemo {
@@ -21,190 +24,200 @@ public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
 
-// Fixed size dimensions of array or collections stored in the TTree if any.
+  // Fixed size dimensions of array or collections stored in the TTree if any.
 
-   // Declaration of leaf types
-   Int_t           runNumber;
-   Int_t           eventNumber;
-   // ------------------------------------------------------- [detector jet]
-   Float_t         jetCalE;
-   Float_t         jetCalPt;
-   Float_t         jetCalEta;
-   Float_t         jetCalPhi;
-   Float_t         jetRawE;
-   Float_t         jetRawPt;
-   Float_t         jetRawEta;
-   Float_t         jetRawPhi;
-   Int_t           jetNConst;
-   // ------------------------------------------------------- [truth jet]
-   Float_t         truthJetMatchRadius;                                     // dR = sqrt(deltaRap^2+deltaPhi^2)
-   Float_t         truthJetE;
-   Float_t         truthJetPt;
-   Float_t         truthJetRap;
-   Float_t         truthJetPhi;
-   // ------------------------------------------------------- [cluster stuff - same as single particles]
-   Int_t           nCluster;
-   Int_t           clusterIndex;
-   Int_t           cluster_nCells;
-   Int_t           cluster_nCells_tot;
-   Float_t         clusterECalib;
-   Float_t         clusterPtCalib;
-   Float_t         clusterEtaCalib;
-   Float_t         clusterPhiCalib;
-   Float_t         cluster_sumCellECalib;
-   Float_t         cluster_fracECalib;
-   Float_t         cluster_fracECalib_ref;
-   Float_t         clusterE;
-   Float_t         clusterPt;
-   Float_t         clusterEta;
-   Float_t         clusterPhi;
-   Float_t         cluster_sumCellE;
-   Float_t         cluster_time;
-   Float_t         cluster_fracE;
-   Float_t         cluster_fracE_ref;
-   Float_t         cluster_EM_PROBABILITY;
-   Float_t         cluster_HAD_WEIGHT;
-   Float_t         cluster_OOC_WEIGHT;
-   Float_t         cluster_DM_WEIGHT;
-   Float_t         cluster_ENG_CALIB_TOT;
-   Float_t         cluster_ENG_CALIB_OUT_T;
-   Float_t         cluster_ENG_CALIB_DEAD_TOT;
-   Float_t         cluster_CENTER_MAG;
-   Float_t         cluster_FIRST_ENG_DENS;
-   Float_t         cluster_FIRST_PHI;
-   Float_t         cluster_FIRST_ETA;
-   Float_t         cluster_SECOND_R;
-   Float_t         cluster_SECOND_LAMBDA;
-   Float_t         cluster_DELTA_PHI;
-   Float_t         cluster_DELTA_THETA;
-   Float_t         cluster_DELTA_ALPHA;
-   Float_t         cluster_CENTER_X;
-   Float_t         cluster_CENTER_Y;
-   Float_t         cluster_CENTER_Z;
-   Float_t         cluster_CENTER_LAMBDA;
-   Float_t         cluster_LATERAL;
-   Float_t         cluster_LONGITUDINAL;
-   Float_t         cluster_ENG_FRAC_EM;
-   Float_t         cluster_ENG_FRAC_MAX;
-   Float_t         cluster_ENG_FRAC_CORE;
-   Float_t         cluster_SECOND_ENG_DENS;
-   Float_t         cluster_ISOLATION;
-   Float_t         cluster_ENG_BAD_CELLS;
-   Float_t         cluster_N_BAD_CELLS;
-   Float_t         cluster_N_BAD_CELLS_CORR;
-   Float_t         cluster_BAD_CELLS_CORR_E;
-   Float_t         cluster_BADLARQ_FRAC;
-   Float_t         cluster_ENG_POS;
-   Float_t         cluster_SIGNIFICANCE;
-   Float_t         cluster_CELL_SIGNIFICANCE;
-   Float_t         cluster_CELL_SIG_SAMPLING;
-   Float_t         cluster_AVG_LAR_Q;
-   Float_t         cluster_AVG_TILE_Q;
-   Float_t         cluster_ENG_BAD_HV_CELLS;
-   Float_t         cluster_N_BAD_HV_CELLS;
-   Float_t         cluster_PTD;
-   Float_t         cluster_MASS;
-   Float_t         cluster_SECOND_TIME;
+  // extra entry 
+  Int_t            entry       = { -1 };
+  // Declaration of leaf types
+  Int_t           runNumber    = { 0  };
+  Int_t           eventNumber  = { 0  };
+  // ------------------------------------------------------- [detector jet]
+  Float_t         jetCalE      = { 0. };
+  Float_t         jetCalPt     = { 0. };
+  Float_t         jetCalEta    = { 0. };
+  Float_t         jetCalPhi    = { 0. };
+  Float_t         jetRawE      = { 0. };
+  Float_t         jetRawPt     = { 0. };
+  Float_t         jetRawEta    = { 0. };
+  Float_t         jetRawPhi    = { 0. };
+  Int_t           jetNConst    = { 0  };    
+  // ------------------------------------------------------- [truth jet]
+  Float_t         truthJetMatchRadius;                                     // dR = sqrt(deltaRap^2+deltaPhi^2)
+  Float_t         truthJetE    = { 0. }; 
+  Float_t         truthJetPt   = { 0. };
+  Float_t         truthJetRap  = { 0. };
+  Float_t         truthJetPhi  = { 0. };
+  // ------------------------------------------------------- [cluster stuff - same as single particles]
+  Int_t           nCluster                     = { 0  };  
+  Int_t           clusterIndex 		       = { 0  };
+  Int_t           cluster_nCells 	       = { 0  };
+  Int_t           cluster_nCells_tot	       = { 0  };
+  Float_t         clusterECalib  	       = { 0. };
+  Float_t         clusterPtCalib	       = { 0. };
+  Float_t         clusterEtaCalib	       = { 0. };
+  Float_t         clusterPhiCalib	       = { 0. };
+  Float_t         cluster_sumCellECalib        = { 0. };
+  Float_t         cluster_fracECalib	       = { 0. };
+  Float_t         cluster_fracECalib_ref       = { 0. };
+  Float_t         clusterE                     = { 0. };
+  Float_t         clusterPt 		       = { 0. };
+  Float_t         clusterEta 		       = { 0. };
+  Float_t         clusterPhi 		       = { 0. };
+  Float_t         cluster_sumCellE 	       = { 0. };
+  Float_t         cluster_time 		       = { 0. };
+  Float_t         cluster_fracE 	       = { 0. };
+  Float_t         cluster_fracE_ref 	       = { 0. };
+  Float_t         cluster_EM_PROBABILITY       = { 0. }; 
+  Float_t         cluster_HAD_WEIGHT           = { 0. };
+  Float_t         cluster_OOC_WEIGHT 	       = { 0. };
+  Float_t         cluster_DM_WEIGHT 	       = { 0. };
+  Float_t         cluster_ENG_CALIB_TOT        = { 0. };
+  Float_t         cluster_ENG_CALIB_OUT_T      = { 0. };
+  Float_t         cluster_ENG_CALIB_DEAD_TOT   = { 0. };
+  Float_t         cluster_CENTER_MAG           = { 0. };
+  Float_t         cluster_FIRST_ENG_DENS       = { 0. };
+  Float_t         cluster_FIRST_PHI	       = { 0. };
+  Float_t         cluster_FIRST_ETA	       = { 0. };
+  Float_t         cluster_SECOND_R	       = { 0. };
+  Float_t         cluster_SECOND_LAMBDA        = { 0. };
+  Float_t         cluster_DELTA_PHI 	       = { 0. };
+  Float_t         cluster_DELTA_THETA	       = { 0. };
+  Float_t         cluster_DELTA_ALPHA	       = { 0. };
+  Float_t         cluster_CENTER_X	       = { 0. };
+  Float_t         cluster_CENTER_Y	       = { 0. };
+  Float_t         cluster_CENTER_Z	       = { 0. };
+  Float_t         cluster_CENTER_LAMBDA        = { 0. };
+  Float_t         cluster_LATERAL	       = { 0. };
+  Float_t         cluster_LONGITUDINAL	       = { 0. };
+  Float_t         cluster_ENG_FRAC_EM	       = { 0. };
+  Float_t         cluster_ENG_FRAC_MAX 	       = { 0. };
+  Float_t         cluster_ENG_FRAC_CORE        = { 0. };
+  Float_t         cluster_SECOND_ENG_DENS      = { 0. };
+  Float_t         cluster_ISOLATION 	       = { 0. };
+  Float_t         cluster_ENG_BAD_CELLS        = { 0. };
+  Float_t         cluster_N_BAD_CELLS 	       = { 0. };
+  Float_t         cluster_N_BAD_CELLS_CORR     = { 0. };
+  Float_t         cluster_BAD_CELLS_CORR_E     = { 0. };
+  Float_t         cluster_BADLARQ_FRAC 	       = { 0. };
+  Float_t         cluster_ENG_POS	       = { 0. };
+  Float_t         cluster_SIGNIFICANCE	       = { 0. };
+  Float_t         cluster_CELL_SIGNIFICANCE    = { 0. };
+  Float_t         cluster_CELL_SIG_SAMPLING    = { 0. };
+  Float_t         cluster_AVG_LAR_Q	       = { 0. };
+  Float_t         cluster_AVG_TILE_Q	       = { 0. };
+  Float_t         cluster_ENG_BAD_HV_CELLS     = { 0. };
+  Float_t         cluster_N_BAD_HV_CELLS       = { 0. };
+  Float_t         cluster_PTD		       = { 0. };
+  Float_t         cluster_MASS		       = { 0. };
+  Float_t         cluster_SECOND_TIME	       = { 0. };
+  Float_t         CalibratedE		       = { 0. };
+  Float_t         Delta_Calib_E 	       = { 0. };
+  Float_t         Delta_E                      = { 0. };             
+  
 
    // List of branches
-   TBranch        *b_runNumber;   //!
-   TBranch        *b_eventNumber;   //!
-   TBranch        *b_jetCalE;   //!
-   TBranch        *b_jetCalPt;   //!
-   TBranch        *b_jetCalEta;   //!
-   TBranch        *b_jetCalPhi;   //!
-   TBranch        *b_jetRawE;   //!
-   TBranch        *b_jetRawPt;   //!
-   TBranch        *b_jetRawEta;   //!
-   TBranch        *b_jetRawPhi;   //!
-   TBranch        *b_jetNConst;   //!
-   TBranch        *b_truthJetMatchRadius;   //!
-   TBranch        *b_truthJetE;   //!
-   TBranch        *b_truthJetPt;   //!
-   TBranch        *b_truthJetRap;   //!
-   TBranch        *b_truthJetPhi;   //!
-   TBranch        *b_nCluster;   //!
-   TBranch        *b_clusterIndex;   //!
-   TBranch        *b_cluster_nCells;   //!
-   TBranch        *b_cluster_nCells_tot;   //!
-   TBranch        *b_clusterECalib;   //!
-   TBranch        *b_clusterPtCalib;   //!
-   TBranch        *b_clusterEtaCalib;   //!
-   TBranch        *b_clusterPhiCalib;   //!
-   TBranch        *b_cluster_sumCellECAlib;   //!
-   TBranch        *b_cluster_fracECalib;   //!
-   TBranch        *b_cluster_fracECalib_ref;   //!
-   TBranch        *b_clusterE;   //!
-   TBranch        *b_clusterPt;   //!
-   TBranch        *b_clusterEta;   //!
-   TBranch        *b_clusterPhi;   //!
-   TBranch        *b_cluster_sumCellE;   //!
-   TBranch        *b_cluster_time;   //!
-   TBranch        *b_cluster_fracE;   //!
-   TBranch        *b_cluster_fracE_ref;   //!
-   TBranch        *b_cluster_EM_PROBABILITY;   //!
-   TBranch        *b_cluster_HAD_WEIGHT;   //!
-   TBranch        *b_cluster_OOC_WEIGHT;   //!
-   TBranch        *b_cluster_DM_WEIGHT;   //!
-   TBranch        *b_cluster_ENG_CALIB_TOT;   //!
-   TBranch        *b_cluster_ENG_CALIB_OUT_T;   //!
-   TBranch        *b_cluster_ENG_CALIB_DEAD_TOT;   //!
-   TBranch        *b_cluster_CENTER_MAG;   //!
-   TBranch        *b_cluster_FIRST_ENG_DENS;   //!
-   TBranch        *b_cluster_FIRST_PHI;   //!
-   TBranch        *b_cluster_FIRST_ETA;   //!
-   TBranch        *b_cluster_SECOND_R;   //!
-   TBranch        *b_cluster_SECOND_LAMBDA;   //!
-   TBranch        *b_cluster_DELTA_PHI;   //!
-   TBranch        *b_cluster_DELTA_THETA;   //!
-   TBranch        *b_cluster_DELTA_ALPHA;   //!
-   TBranch        *b_cluster_CENTER_X;   //!
-   TBranch        *b_cluster_CENTER_Y;   //!
-   TBranch        *b_cluster_CENTER_Z;   //!
-   TBranch        *b_cluster_CENTER_LAMBDA;   //!
-   TBranch        *b_cluster_LATERAL;   //!
-   TBranch        *b_cluster_LONGITUDINAL;   //!
-   TBranch        *b_cluster_ENG_FRAC_EM;   //!
-   TBranch        *b_cluster_ENG_FRAC_MAX;   //!
-   TBranch        *b_cluster_ENG_FRAC_CORE;   //!
-   TBranch        *b_cluster_SECOND_ENG_DENS;   //!
-   TBranch        *b_cluster_ISOLATION;   //!
-   TBranch        *b_cluster_ENG_BAD_CELLS;   //!
-   TBranch        *b_cluster_N_BAD_CELLS;   //!
-   TBranch        *b_cluster_N_BAD_CELLS_CORR;   //!
-   TBranch        *b_cluster_BAD_CELLS_CORR_E;   //!
-   TBranch        *b_cluster_BADLARQ_FRAC;   //!
-   TBranch        *b_cluster_ENG_POS;   //!
-   TBranch        *b_cluster_SIGNIFICANCE;   //!
-   TBranch        *b_cluster_CELL_SIGNIFICANCE;   //!
-   TBranch        *b_cluster_CELL_SIG_SAMPLING;   //!
-   TBranch        *b_cluster_AVG_LAR_Q;   //!
-   TBranch        *b_cluster_AVG_TILE_Q;   //!
-   TBranch        *b_cluster_ENG_BAD_HV_CELLS;   //!
-   TBranch        *b_cluster_N_BAD_HV_CELLS;   //!
-   TBranch        *b_cluster_PTD;   //!
-   TBranch        *b_cluster_MASS;   //!
-   TBranch        *b_cluster_SECOND_TIME;   //!
+  TBranch*        b_entry                       = { (TBranch*)0 };  //!
+  TBranch*        b_runNumber                   = { (TBranch*)0 };  //!
+  TBranch*        b_eventNumber                 = { (TBranch*)0 };  //!
+  TBranch*        b_jetCalE                     = { (TBranch*)0 };  //!
+  TBranch*        b_jetCalPt                    = { (TBranch*)0 };  //!
+  TBranch*        b_jetCalEta                   = { (TBranch*)0 };  //!
+  TBranch*        b_jetCalPhi                   = { (TBranch*)0 };  //!
+  TBranch*        b_jetRawE                     = { (TBranch*)0 };  //!
+  TBranch*        b_jetRawPt                    = { (TBranch*)0 };  //!
+  TBranch*        b_jetRawEta                   = { (TBranch*)0 };  //!
+  TBranch*        b_jetRawPhi                   = { (TBranch*)0 };  //!
+  TBranch*        b_jetNConst                   = { (TBranch*)0 };  //!
+  TBranch*        b_truthJetMatchRadius         = { (TBranch*)0 };  //!
+  TBranch*        b_truthJetE                   = { (TBranch*)0 };  //!
+  TBranch*        b_truthJetPt                  = { (TBranch*)0 };  //!
+  TBranch*        b_truthJetRap                 = { (TBranch*)0 };  //!
+  TBranch*        b_truthJetPhi                 = { (TBranch*)0 };  //!
+  TBranch*        b_nCluster                    = { (TBranch*)0 };  //!
+  TBranch*        b_clusterIndex                = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_nCells              = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_nCells_tot          = { (TBranch*)0 };  //!
+  TBranch*        b_clusterECalib               = { (TBranch*)0 };  //!
+  TBranch*        b_clusterPtCalib              = { (TBranch*)0 };  //!
+  TBranch*        b_clusterEtaCalib             = { (TBranch*)0 };  //!
+  TBranch*        b_clusterPhiCalib             = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_sumCellECAlib       = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_fracECalib          = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_fracECalib_ref      = { (TBranch*)0 };  //!
+  TBranch*        b_clusterE                    = { (TBranch*)0 };  //!
+  TBranch*        b_clusterPt                   = { (TBranch*)0 };  //!
+  TBranch*        b_clusterEta                  = { (TBranch*)0 };  //!
+  TBranch*        b_clusterPhi                  = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_sumCellE            = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_time                = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_fracE               = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_fracE_ref           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_EM_PROBABILITY      = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_HAD_WEIGHT          = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_OOC_WEIGHT          = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_DM_WEIGHT           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_CALIB_TOT       = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_CALIB_OUT_T     = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_CALIB_DEAD_TOT  = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CENTER_MAG          = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_FIRST_ENG_DENS      = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_FIRST_PHI           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_FIRST_ETA           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_SECOND_R            = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_SECOND_LAMBDA       = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_DELTA_PHI           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_DELTA_THETA         = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_DELTA_ALPHA         = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CENTER_X            = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CENTER_Y            = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CENTER_Z            = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CENTER_LAMBDA       = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_LATERAL             = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_LONGITUDINAL        = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_FRAC_EM         = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_FRAC_MAX        = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_FRAC_CORE       = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_SECOND_ENG_DENS     = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ISOLATION           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_BAD_CELLS       = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_N_BAD_CELLS         = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_N_BAD_CELLS_CORR    = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_BAD_CELLS_CORR_E    = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_BADLARQ_FRAC        = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_POS             = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_SIGNIFICANCE        = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CELL_SIGNIFICANCE   = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_CELL_SIG_SAMPLING   = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_AVG_LAR_Q           = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_AVG_TILE_Q          = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_ENG_BAD_HV_CELLS    = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_N_BAD_HV_CELLS      = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_PTD                 = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_MASS                = { (TBranch*)0 };  //!
+  TBranch*        b_cluster_SECOND_TIME         = { (TBranch*)0 };  //!
+  TBranch*        b_CalibratedE                 = { (TBranch*)0 };  //!
+  TBranch*        b_Delta_Calib_E               = { (TBranch*)0 };  //!
+  TBranch*        b_Delta_E                     = { (TBranch*)0 };  //!
 
-   ClusterTreeDemo(TTree *tree=0);
-   virtual ~ClusterTreeDemo();
-   virtual Int_t    Cut(Long64_t entry);
-   virtual Int_t    GetEntry(Long64_t entry);
-   virtual Long64_t LoadTree(Long64_t entry);
-   virtual void     Init(TTree *tree);
-   virtual void     Loop(const std::string& outFile,Long64_t kentries=-1);
-   virtual Bool_t   Notify();
-   virtual void     Show(Long64_t entry = -1);
-   
-   bool   newEvent(); 
-   bool   newJet(); 
-   double stdPhi(double phi); 
+  ClusterTreeDemo(TTree *tree=0);
+  virtual ~ClusterTreeDemo();
+  virtual Int_t    Cut(Long64_t entry);
+  virtual Int_t    GetEntry(Long64_t entry);
+  virtual Long64_t LoadTree(Long64_t entry);
+  virtual void     Init(TTree *tree);
+  virtual void     Loop(const std::string& outFile,Long64_t kentries=-1);
+  virtual Bool_t   Notify();
+  virtual void     Show(Long64_t entry = -1);
+  
+  bool   newEvent(); 
+  bool   newJet(); 
+  double stdPhi(double phi); 
 
-   int    m_runNumber   = { -1  };
-   int    m_eventNumber = { -1  };
+  int    m_runNumber   = { -1  };
+  int    m_eventNumber = { -1  };
 
-   int    m_jetNConst   = { -1  };
-   double m_jetCalE     = { -1. }; 
+  int    m_jetNConst   = { -1  };
+  double m_jetCalE     = { -1. }; 
 };
 
 #endif
@@ -266,6 +279,7 @@ void ClusterTreeDemo::Init(TTree *tree)
    fCurrent = -1;
    fChain->SetMakeClass(1);
 
+   if ( fChain->FindLeaf("entry") != nullptr ) { printf("[ClusterTreeDemo::Init()] INFO Tree \042%s\042 added leaf [%+02i]{entry}\n",fChain->GetName(),fChain->SetBranchAddress("entry",&entry,&b_entry)); }
    fChain->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
    fChain->SetBranchAddress("eventNumber", &eventNumber, &b_eventNumber);
    fChain->SetBranchAddress("jetCalE", &jetCalE, &b_jetCalE);
@@ -344,6 +358,9 @@ void ClusterTreeDemo::Init(TTree *tree)
    fChain->SetBranchAddress("cluster_PTD", &cluster_PTD, &b_cluster_PTD);
    fChain->SetBranchAddress("cluster_MASS", &cluster_MASS, &b_cluster_MASS);
    fChain->SetBranchAddress("cluster_SECOND_TIME", &cluster_SECOND_TIME, &b_cluster_SECOND_TIME);
+   if ( fChain->FindLeaf("CalibratedE"  ) != nullptr ) { printf("[ClusterTreeDemo::Init()] INFO Tree \042%s\042 added leaf [%+02i]{CalibratedE}\n"  ,fChain->GetName(),fChain->SetBranchAddress("CalibratedE"  , &CalibratedE  , &b_CalibratedE  )); } 
+   if ( fChain->FindLeaf("Delta_Calib_E") != nullptr ) { printf("[ClusterTreeDemo::Init()] INFO Tree \042%s\042 added leaf [%+02i]{Delta_Calib_E}\n",fChain->GetName(),fChain->SetBranchAddress("Delta_Calib_E", &Delta_Calib_E, &b_Delta_Calib_E)); }
+   if ( fChain->FindLeaf("Delta_E"      ) != nullptr ) { printf("[ClusterTreeDemo::Init()] INFO Tree \042%s\042 added leaf [%+02i]{Delta_E}\n"      ,fChain->GetName(),fChain->SetBranchAddress("Delta_E"      , &Delta_E      , &b_Delta_E      )); } 
    Notify();
 }
 

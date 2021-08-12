@@ -73,42 +73,64 @@ void ClusterTreeDemo::Loop(const std::string& outFile,Long64_t kentries) {
   
 
   // book histograms: cluster EM response
-  //    pTthreshold            +------------------------------------- <0> EM response vs cluster energy   
-  //         |                 |     +------------------------------- <1> LCW response vs cluster energy
-  //         |                 |     |     +------------------------- <2> EM response vs energy fraction of cluster in jet
-  //         |                 |     |     |     +------------------- <3> LCW response vs energy fraction of cluster in jet
-  //         |                 |     |     |     |
+  //    pTthreshold     +------------------------------------- entry <0> EM  response vs cluster energy   
+  //         |          | +----------------------------------- entry <1> LCW response vs cluster energy
+  //         |          | | +--------------------------------- entry <2> MLC response vs cluster energy
+  //         |          | | | +------------------------------- entry <3> EM  response vs energy fraction of cluster in jet
+  //         |          | | | | +----------------------------- entry <4> LCW response vs energy fraction of cluster in jet
+  //         |          | | | | | +--------------------------- entry <5> MLC response vs energy fraction of cluster in jet
+  //         |          | | | | | | +------------------------- entry <6> LCW rapidity of cluster
+  //         |          | | | | | | | +----------------------- entry <7> EM energy of cluster
+  //         |          | | | | | | | |
   std::map<double,Hist::DistributionList> plotPtJet = {
     {  20., { Hist::book<TH2D>("EMR_Eclus_pt020","EM  response vs EclusDep p_{T,jet}^{JES} > 20 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{EM}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("LCR_Eclus_pt020","LCW response vs EclusDep p_{T,jet}^{JES} > 20 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),    
+	      Hist::book<TH2D>("MLR_Eclus_pt020","ML  response vs EclusDep p_{T,jet}^{JES} > 20 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{ML}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("EMR_Fclus_pt020","EM  response vs FclusJet p_{T,jet}^{JES} > 20 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{EM}/E_{clus}^{dep}" ),
 	      Hist::book<TH2D>("LCR_Fclus_pt020","LCW response vs FclusJet p_{T,jet}^{JES} > 20 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{LCW}/E_{clus}^{dep}"),
-	      Hist::book<TH1D>("ClLCW_Rap_pt020","LCW cluster rapidity p_{T,jet}^{JES} > 20 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"                                              ) } },
+	      Hist::book<TH2D>("MLR_Fclus_pt020","ML  response vs FclusJet p_{T,jet}^{JES} > 20 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{ML}/E_{clus}^{dep}" ),
+	      Hist::book<TH1D>("ClLCW_Rap_pt020","LCW cluster rapidity p_{T,jet}^{JES} > 20 GeV"     ,99,-4.95,4.95           ,"y_{clus}^{LCW}"              ,"Entries"                      ),
+	      Hist::book<TH1D>("ClEM__Ene_pt020","EM  cluster energy p_{T,jet}^{JES} > 20 GeV"       ,logBins                 ,"E_{clus}^{EM} [GeV]"         ,"Entries"                      ) } },
     {  40., { Hist::book<TH2D>("EMR_Eclus_pt040","EM  response vs EclusDep p_{T,jet}^{JES} > 40 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{EM}/E_{clus}^{dep}" ),    
-	      Hist::book<TH2D>("LCR_Eclus_pt040","LCW response vs EclusDep p_{T,jet}^{JES} > 40 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),
+	      Hist::book<TH2D>("LCR_Eclus_pt040","LCW response vs EclusDep p_{T,jet}^{JES} > 40 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),    
+	      Hist::book<TH2D>("MLR_Eclus_pt040","ML  response vs EclusDep p_{T,jet}^{JES} > 40 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{ML}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("EMR_Fclus_pt040","EM  response vs FclusJet p_{T,jet}^{JES} > 40 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{EM}/E_{clus}^{dep}" ),
 	      Hist::book<TH2D>("LCR_Fclus_pt040","LCW response vs FclusJet p_{T,jet}^{JES} > 40 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{LCW}/E_{clus}^{dep}"),
-	      Hist::book<TH1D>("ClLCW_Rap_pt040","LCW cluster rapidity p_{T,jet}^{JES} > 40 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"                                              ) } },
+	      Hist::book<TH2D>("MLR_Fclus_pt040","ML  response vs FclusJet p_{T,jet}^{JES} > 40 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{ML}/E_{clus}^{dep}" ),
+	      Hist::book<TH1D>("ClLCW_Rap_pt040","LCW cluster rapidity p_{T,jet}^{JES} > 40 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"              ,"Entries"                      ),
+	      Hist::book<TH1D>("ClEM__Ene_pt040","EM  cluster energy p_{T,jet}^{JES} > 40 GeV"       ,logBins                 ,"E_{clus}^{EM} [GeV]"         ,"Entries"                      ) } },
     {  60., { Hist::book<TH2D>("EMR_Eclus_pt060","EM  response vs EclusDep p_{T,jet}^{JES} > 60 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{EM}/E_{clus}^{dep}" ),    
-	      Hist::book<TH2D>("LCR_Eclus_pt060","LCW response vs EclusDep p_{T,jet}^{JES} > 60 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),
+	      Hist::book<TH2D>("LCR_Eclus_pt060","LCW response vs EclusDep p_{T,jet}^{JES} > 60 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),    
+	      Hist::book<TH2D>("MLR_Eclus_pt060","ML  response vs EclusDep p_{T,jet}^{JES} > 60 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{ML}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("EMR_Fclus_pt060","EM  response vs FclusJet p_{T,jet}^{JES} > 60 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{EM}/E_{clus}^{dep}" ),
 	      Hist::book<TH2D>("LCR_Fclus_pt060","LCW response vs FclusJet p_{T,jet}^{JES} > 60 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{LCW}/E_{clus}^{dep}"),
-	      Hist::book<TH1D>("ClLCW_Rap_pt060","LCW cluster rapidity p_{T,jet}^{JES} > 60 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"                                              ) } },
+	      Hist::book<TH2D>("MLR_Fclus_pt060","ML  response vs FclusJet p_{T,jet}^{JES} > 60 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{ML}/E_{clus}^{dep}" ),
+	      Hist::book<TH1D>("ClLCW_Rap_pt060","LCW cluster rapidity p_{T,jet}^{JES} > 60 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"              ,"Entries"                      ),
+	      Hist::book<TH1D>("ClEM__Ene_pt060","EM  cluster energy p_{T,jet}^{JES} > 60 GeV"       ,logBins                 ,"E_{clus}^{EM} [GeV]"         ,"Entries"                      ) } },
     {  80., { Hist::book<TH2D>("EMR_Eclus_pt080","EM  response vs EclusDep p_{T,jet}^{JES} > 80 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{EM}/E_{clus}^{dep}" ),    
-	      Hist::book<TH2D>("LCR_Eclus_pt080","LCW response vs EclusDep p_{T,jet}^{JES} > 80 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),
+	      Hist::book<TH2D>("LCR_Eclus_pt080","LCW response vs EclusDep p_{T,jet}^{JES} > 80 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),    
+	      Hist::book<TH2D>("MLR_Eclus_pt080","ML  response vs EclusDep p_{T,jet}^{JES} > 80 GeV" ,logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{ML}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("EMR_Fclus_pt080","EM  response vs FclusJet p_{T,jet}^{JES} > 80 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{EM}/E_{clus}^{dep}" ),
 	      Hist::book<TH2D>("LCR_Fclus_pt080","LCW response vs FclusJet p_{T,jet}^{JES} > 80 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{LCW}/E_{clus}^{dep}"),
-	      Hist::book<TH1D>("ClLCW_Rap_pt080","LCW cluster rapidity p_{T,jet}^{JES} > 80 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"                                              ) } },
+	      Hist::book<TH2D>("MLR_Fclus_pt080","ML  response vs FclusJet p_{T,jet}^{JES} > 80 GeV" ,logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{ML}/E_{clus}^{dep}" ),
+	      Hist::book<TH1D>("ClLCW_Rap_pt080","LCW cluster rapidity p_{T,jet}^{JES} > 80 GeV"     ,99,-4.95,4.95,           "y_{clus}^{LCW}"              ,"Entries"                      ),
+	      Hist::book<TH1D>("ClEM__Ene_pt080","EM  cluster energy p_{T,jet}^{JES} > 80 GeV"       ,logBins                 ,"E_{clus}^{EM} [GeV]"         ,"Entries"                      ) } },
     { 100., { Hist::book<TH2D>("EMR_Eclus_pt100","EM  response vs EclusDep p_{T,jet}^{JES} > 100 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{EM}/E_{clus}^{dep}" ),    
-	      Hist::book<TH2D>("LCR_Eclus_pt100","LCW response vs EclusDep p_{T,jet}^{JES} > 100 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),
+	      Hist::book<TH2D>("LCR_Eclus_pt100","LCW response vs EclusDep p_{T,jet}^{JES} > 100 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),    
+	      Hist::book<TH2D>("MLR_Eclus_pt100","ML  response vs EclusDep p_{T,jet}^{JES} > 100 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{ML}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("EMR_Fclus_pt100","EM  response vs FclusJet p_{T,jet}^{JES} > 100 GeV",logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{EM}/E_{clus}^{dep}" ),
 	      Hist::book<TH2D>("LCR_Fclus_pt100","LCW response vs FclusJet p_{T,jet}^{JES} > 100 GeV",logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{LCW}/E_{clus}^{dep}"),
-	      Hist::book<TH1D>("ClLCW_Rap_pt100","LCW cluster rapidity p_{T,jet}^{JES} > 100 GeV"    ,99,-4.95,4.95,           "y_{clus}^{LCW}"                                              ) } },
+	      Hist::book<TH2D>("MLR_Fclus_pt100","ML  response vs FclusJet p_{T,jet}^{JES} > 100 GeV",logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{ML}/E_{clus}^{dep}" ),
+	      Hist::book<TH1D>("ClLCW_Rap_pt100","LCW cluster rapidity p_{T,jet}^{JES} > 100 GeV"    ,99,-4.95,4.95,           "y_{clus}^{LCW}"              ,"Entries"                      ),
+	      Hist::book<TH1D>("ClEM__Ene_pt100","EM  cluster energy p_{T,jet}^{JES} > 100 GeV"      ,logBins                 ,"E_{clus}^{EM} [GeV]"         ,"Entries"                      ) } },
     { 200., { Hist::book<TH2D>("EMR_Eclus_pt200","EM  response vs EclusDep p_{T,jet}^{JES} > 200 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{EM}/E_{clus}^{dep}" ),    
-	      Hist::book<TH2D>("LCR_Eclus_pt200","LCW response vs EclusDep p_{T,jet}^{JES} > 200 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),
+	      Hist::book<TH2D>("LCR_Eclus_pt200","LCW response vs EclusDep p_{T,jet}^{JES} > 200 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{LCW}/E_{clus}^{dep}"),    
+	      Hist::book<TH2D>("MLR_Eclus_pt200","ML  response vs EclusDep p_{T,jet}^{JES} > 200 GeV",logBins       ,100,0.,2.,"E_{clus}^{dep} [GeV]"        ,"E_{clus}^{ML}/E_{clus}^{dep}" ),    
 	      Hist::book<TH2D>("EMR_Fclus_pt200","EM  response vs FclusJet p_{T,jet}^{JES} > 200 GeV",logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{EM}/E_{clus}^{dep}" ),
 	      Hist::book<TH2D>("LCR_Fclus_pt200","LCW response vs FclusJet p_{T,jet}^{JES} > 200 GeV",logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{LCW}/E_{clus}^{dep}"),
-	      Hist::book<TH1D>("ClLCW_Rap_pt200","LCW cluster rapidity p_{T,jet}^{JES} > 200 GeV"    ,99,-4.95,4.95,           "y_{clus}^{LCW}"                                              ) } },
+	      Hist::book<TH2D>("MLR_Fclus_pt200","ML  response vs FclusJet p_{T,jet}^{JES} > 200 GeV",logFbin       ,100,0.,2.,"E_{clus}^{LCW}/E_{jet}^{CSC}","E_{clus}^{ML}/E_{clus}^{dep}" ),
+	      Hist::book<TH1D>("ClLCW_Rap_pt200","LCW cluster rapidity p_{T,jet}^{JES} > 200 GeV"    ,99,-4.95,4.95,           "y_{clus}^{LCW}"              ,"Entries"                      ),
+	      Hist::book<TH1D>("ClEM__Ene_pt200","EM  cluster energy p_{T,jet}^{JES} > 200 GeV"      ,logBins                 ,"E_{clus}^{EM} [GeV]"         ,"Entries"                      ) } },
   };
   printf("[ClusterTreeDemo::Loop(\042%s\042,%lli)] INFO added %zu sets of distributions at jet pT thresholds, new total number of distributions %zu\n",outFile.c_str(),kentries,plotPtJet.size(),Hist::mgr()->size()); 
 
@@ -151,21 +173,20 @@ void ClusterTreeDemo::Loop(const std::string& outFile,Long64_t kentries) {
     }
     // cluster stuff
     if ( !jetVeto ) { 
-      double elcw(clusterECalib);
-      double eemc(clusterE); 
+      double elcw(clusterECalib); double eemc(clusterE); double emlc(CalibratedE);
       double whad(cluster_HAD_WEIGHT);
       double ehad(whad*eemc); 
       double edep(cluster_ENG_CALIB_TOT); 
       double flcw(elcw/jetRawE);
       double ylcw(clusterEtaCalib); 
       if ( edep != 0. ) { 
-	double rlcw(ehad/edep); double remc(eemc/edep);
+	double rlcw(ehad/edep); double remc(eemc/edep); double rmlc(emlc/edep); 
 	for ( auto entry : dlist  ) { 
-	  std::get<0>(entry)->Fill(edep,remc); 
-	  std::get<1>(entry)->Fill(edep,rlcw); 
-	  std::get<2>(entry)->Fill(flcw,remc); 
-	  std::get<3>(entry)->Fill(flcw,rlcw); 
-	  std::get<4>(entry)->Fill(ylcw);
+	  Hist::fill(entry,0,edep,remc); Hist::fill(entry,1,edep,rlcw); 
+	  Hist::fill(entry,3,flcw,remc); Hist::fill(entry,4,flcw,rlcw); 
+	  Hist::fill(entry,6,ylcw,0.  );
+	  Hist::fill(entry,7,eemc,0.  );
+	  if ( b_CalibratedE != nullptr ) { Hist::fill(entry,2,edep,rmlc); Hist::fill(entry,5,flcw,rmlc); }
 	}
       }
     }

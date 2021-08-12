@@ -60,8 +60,31 @@ HistManager* HistManager::_instance = (HistManager*)0;
 std::ostream& operator<<(std::ostream& ostr,const HistManager& hmgr) { return hmgr.print(ostr); }
 
 namespace Hist {
+  //                   +------------------------------------------- entry <0> EM  response vs cluster energy   
+  //                   |     +------------------------------------- entry <1> LCW response vs cluster energy
+  //                   |     |     +------------------------------- entry <2> MLC response vs cluster energy
+  //                   |     |     |     +------------------------- entry <3> EM  response vs energy fraction of cluster in jet
+  //                   |     |     |     |     +------------------- entry <4> LCW response vs energy fraction of cluster in jet
+  //                   |     |     |     |     |     +------------- entry <5> MLC response vs energy fraction of cluster in jet
+  //                   |     |     |     |     |     |     +------- entry <6> LCW rapidity of cluster
+  //                   |     |     |     |     |     |     |     +- entry <7> EM energy of cluster
+  //                   |     |     |     |     |     |     |     |
+  typedef std::tuple<TH2D*,TH2D*,TH2D*,TH2D*,TH2D*,TH2D*,TH1D*,TH1D*> DistributionList;
 
-  typedef std::tuple<TH2D*,TH2D*,TH2D*,TH2D*,TH1D*> DistributionList;
+  // fill distributions in list
+  static void fill(DistributionList& dlist,int ipos,double xval,double yval,double weight=1.) {
+    switch ( ipos ) {
+    case 0:  std::get<0>(dlist)->Fill(xval,yval,weight); break;
+    case 1:  std::get<1>(dlist)->Fill(xval,yval,weight); break;
+    case 2:  std::get<2>(dlist)->Fill(xval,yval,weight); break;
+    case 3:  std::get<3>(dlist)->Fill(xval,yval,weight); break;
+    case 4:  std::get<4>(dlist)->Fill(xval,yval,weight); break;
+    case 5:  std::get<5>(dlist)->Fill(xval,yval,weight); break;
+    case 6:  std::get<6>(dlist)->Fill(xval,     weight); break;
+    case 7:  std::get<7>(dlist)->Fill(xval,     weight); break;
+    default: break;
+    }
+  }
 
   HistManager* mgr() { return HistManager::instance(); }
  
