@@ -409,5 +409,46 @@ namespace HistUtils {
       if ( i % 2 == 0 ) { tl.DrawLatex(xt,yt,_calos.at(i-1).c_str()); } else { tl.DrawLatex(xt,ty,_calos.at(i-1).c_str()); }
     }
   }
+
+  ////////////
+  // Colors //
+  ////////////
+
+  namespace Color {
+    constexpr int blue    = kBlue; 
+    constexpr int red     = kRed; 
+    constexpr int green   = kGreen;
+    constexpr int black   = kBlack;
+    constexpr int white   = kWhite;
+    constexpr int grey    = kGray; 
+    constexpr int pink    = kPink; 
+    constexpr int magenta = kMagenta;
+    constexpr int violet  = kViolet; 
+    constexpr int orange  = kOrange; 
+    constexpr int spring  = kSpring; 
+    constexpr int teal    = kTeal;
+    constexpr int cyan    = kCyan; 
+    constexpr int azure   = kAzure; 
+    constexpr int yellow  = kYellow; 
+    constexpr int brown   = red+4; 
+    namespace Light { 
+      constexpr int blue    = kBlue-10; 
+      constexpr int red     = kRed-10; 
+      constexpr int green   = kGreen-10;
+      constexpr int black   = kGray;
+      constexpr int white   = kWhite;
+      constexpr int grey    = kGray; 
+      constexpr int pink    = kPink; 
+      constexpr int magenta = kMagenta-10;
+      constexpr int violet  = kViolet-9; 
+      constexpr int orange  = kOrange-9; 
+      constexpr int spring  = kSpring+10; 
+      constexpr int teal    = kTeal-4;
+      constexpr int cyan    = kCyan-10; 
+      constexpr int azure   = kAzure-9; 
+      constexpr int yellow  = kYellow-10; 
+      constexpr int brown   = red-5; 
+    }
+  }
 }
 #endif

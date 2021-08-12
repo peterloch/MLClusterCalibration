@@ -2,6 +2,8 @@
 #ifndef HISTMANAGER_H
 #define HISTMANAGER_H
 
+#include <TH1.h>
+
 #include <string>
 #include <map>
 #include <iostream>
@@ -9,7 +11,6 @@
 #include <vector>
 #include <tuple>
 
-#include <TH1.h>
 
 #include <cstdio>
 

@@ -163,12 +163,12 @@ void plotClusterJet(const std::string& fileName="JZ3.full.topo-cluster.hist.root
    /* 48 */ Types::Hist::identify("Pt_JJES"        ,"TH1D","JET",Types::Axis::description(   0., 400.,false,"p_{T,jet}^{JES} [GeV]"                               ),Types::Axis::description(  1., -1.,false,"Entries"                      )),
    /* 49 */ Types::Hist::identify("RapJEMS"        ,"TH1D","JET",Types::Axis::description(   1.,  -1.,false,"y_{jet}^{ConstScale}"                                ),Types::Axis::description(  1., -1.,false,"Entries"                      )),
    /* 50 */ Types::Hist::identify("RapJJES"        ,"TH1D","JET",Types::Axis::description(   1.,  -1.,false,"y_{jet}^{JES}"                                       ),Types::Axis::description(  1., -1.,false,"Entries"                      )),
-   /* 51 */ Types::Hist::identify("ClEM__Rap_pt020","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
-   /* 52 */ Types::Hist::identify("ClEM__Rap_pt040","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
-   /* 53 */ Types::Hist::identify("ClEM__Rap_pt060","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
-   /* 54 */ Types::Hist::identify("ClEM__Rap_pt080","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
-   /* 55 */ Types::Hist::identify("ClEM__Rap_pt100","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
-   /* 56 */ Types::Hist::identify("ClEM__Rap_pt200","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      ))  
+   /* 51 */ Types::Hist::identify("ClEM__Ene_pt020","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
+   /* 52 */ Types::Hist::identify("ClEM__Ene_pt040","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
+   /* 53 */ Types::Hist::identify("ClEM__Ene_pt060","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
+   /* 54 */ Types::Hist::identify("ClEM__Ene_pt080","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
+   /* 55 */ Types::Hist::identify("ClEM__Ene_pt100","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      )),  
+   /* 56 */ Types::Hist::identify("ClEM__Ene_pt200","TH1D","CLU",Types::Axis::description( 0.05,2000.,true ,"E_{clus}^{EM} [GeV]"                                 ),Types::Axis::description(  1., -1.,false,"Entries"                      ))  
   };
 
   // plot title lookup 
