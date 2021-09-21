@@ -21,6 +21,8 @@ void plotClusterEnergies(const std::string& dirName="jz2_cut_2") {
   std::map<std::string,std::string> fileDictionary = { 
     { "jz2_cut_2", "JZ2_Cut2_summary.root" },
     { "jz2_cut_3", "JZ2_Cut3_summary.root" },
+    { "jz3_cut_0", "JZ3_Cut0_summary.root" },
+    { "jz3_cut_1", "JZ3_Cut1_summary.root" },
     { "jz3_cut_2", "JZ3_Cut2_summary.root" },
     { "jz3_cut_3", "JZ3_Cut3_summary.root" }
   }; 
@@ -63,7 +65,7 @@ void plotClusterEnergies(const std::string& dirName="jz2_cut_2") {
   cvs->SetLogy(); 
   
   // double xmin(hlist.front()->GetXaxis()->GetXmin()); double xmax(hlist.front()->GetXaxis()->GetXmax());
-  double xmin(0.2 ); double ymin(0.9); ymax *= 2.;
+  double xmin(0.02 ); double ymin(0.9); ymax *= 2.;
   double xmax = dirName.find("jz2") != std::string::npos ? 210. : 2100.;
   TH1D* _frame = new TH1D("_frame","_frame",100,xmin,xmax);
   _frame->SetMinimum(ymin); 
@@ -71,7 +73,7 @@ void plotClusterEnergies(const std::string& dirName="jz2_cut_2") {
   _frame->GetXaxis()->SetTitle("E_{clus}^{EM} [GeV]"); 
   _frame->GetYaxis()->SetTitle("Entries");
   _frame->DrawCopy("axis");
-  TLegend* lptr = new TLegend(0.2,0.5,0.4,0.9); 
+  TLegend* lptr = new TLegend(0.4,0.3,0.6,0.7); 
   for ( auto hptr : hlist ) { hptr->DrawCopy("same hist"); lptr->AddEntry(hptr,hptr->GetTitle(),"lf"); }
   lptr->Draw("same"); 
   cvs->RedrawAxis(); 
