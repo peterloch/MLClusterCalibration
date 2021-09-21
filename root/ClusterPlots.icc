@@ -1,0 +1,54 @@
+// -*- c++ -*-
+template<class SERVER> ClusterPlots<SERVER>::ClusterPlots() 
+  : SERVER() 
+{
+  int status(0); 
+  m_templateClass = std::string(abi::__cxa_demangle(typeid( SERVER ).name(),0,0,&status));
+  switch ( status ) {
+  case 0:
+    this->msgPrnt("ClusterPlots()",m_msgForm("instantiated with template parameter %s - not configured yet",m_templateClass.c_str()),Msg::INFO); break;
+  case -1:
+    m_templateName = "UNKNOWN";
+    this->msgPrnt("ClusterPlots()",m_msgForm("memory allocation failure for template parameter %s - object usable",m_templateClass.c_str()),Msg::WARN); break;
+  case -2:
+    m_templateName = "UNIDENTIFIED";
+    this->msgPrnt("ClusterPlots()",m_msgForm("invalid class name for template parameter %s - object usable",m_templateClass.c_str()),Msg::WARN); break;
+  case -3:
+    m_templateName = "INVALID";
+    this->msgPrnt("ClusterPlots()",m_msgForm("one or more argument(s) for demangling template parameter %s invalid - object usable",m_templateClass.c_str()),Msg::WARN); break;
+  default:
+    m_templateName = "UNKNOWN";
+    this->msgPrnt("ClusterPlots()",m_msgForm("invalid template parameter configuration yields %s - object usable",m_templateClass.c_str()),Msg::WARN); break;
+  }  
+}
+
+template<class SERVER> bool ClusterPlots<SERVER>::init() {
+  static std::string mname_ = "init()";
+  // check if set up properly
+  if ( !m_isSetup ) { 
+    this->msgPrnt(mname_,this->msgForm("module is not setup up properly:"                   ),MsgType::INFO);
+    this->msgPrnt(mname_,this->msgForm("tree name ..........: \042%s\042",m_treeName.c_str()),MsgType::INFO);
+    MsgType mtype = MsgType::INFO; std::string mformin("input file name ....: \042%s\042"); std::string mformot("output file name ...: \042%s\042");
+    if ( m_inputFileName  == "" ) { mformin += std::string(" [must not be empty]");  mtype = MsgType::ABRT; } this->msgPrnt(mname_,this->msgForm(mformin,m_inputFileName.c_str()) ,mtype); mtype = MsgType::INFO; 
+    if ( m_outputFileName == "" ) { mformot += std::string(" [must not be empty]");  mtype = MsgType::ABRT; } this->msgPrnt(mname_,this->msgForm(mformot,m_outputFileName.c_str()),mtype); mtype = MsgType::INFO; 
+    return false; 
+  }
+  // allocate input file
+  m_inputFile = new TFile(m_inputFileName.c_str(),"READ");
+  if ( m_inputFile == nullptr ) { this->msgPrnt(mname_,this->msgForm("cannot open input file \042%s\042",m_inputFileName.c_str()),MsgType::ABRT); return false; }
+  this->msgPrnt(mname_,this->msgForm("input file \042%s\042 opened (TFile %p)",m_inputFile->GetName(),(void*)m_inputFile),MsgType::INFO);
+  //  
+}
+
+
+template<class SERVER> std::string ClusterPlots<SERVER>::msgForm(const std::string& fmtStr,...) { 
+  static char _buffer[2048];
+  va_list args; va_start(args,fmtStr); vsprintf(_buffer,fmstStr.c_str(),args); va_end(args);
+  return std::string(_buffer); 
+} 
+
+template<class SERVER> const std::string& Clusterplots<SERVER>::msgType(MsgType mtype) { return m_msgTypeToString.at(mtype); }
+
+template<class SERVER> void ClusterPlots<SERVER>::msgPrnt(const std::string& modName,const std::string& msg,MsgType mtype) {
+  printf("[ClusterPlots<%s>::%s] %s %s\n",m_templateName,c_str(),m_modName.c_str(),msgType(mtype).c_str(),msg.c_str());
+}

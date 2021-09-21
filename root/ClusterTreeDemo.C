@@ -186,8 +186,8 @@ void ClusterTreeDemo::Loop(const std::string& outFile,Long64_t kentries) {
 	  Hist::fill2d<1>(entry,edep,rlcw); 
 	  Hist::fill2d<3>(entry,flcw,remc); 
 	  Hist::fill2d<4>(entry,flcw,rlcw); 
-	  Hist::fill1d<6>(entry,ylcw     ); // 1-dim, second value "0." ignored
-	  Hist::fill1d<7>(entry,eemc     ); // 1-dim, second value "0." ignored
+	  Hist::fill1d<6>(entry,ylcw     ); // 1-dim
+	  Hist::fill1d<7>(entry,eemc     ); // 1-dim
 	  if ( b_CalibratedE != nullptr ) { Hist::fill2d<2>(entry,edep,rmlc); Hist::fill2d<5>(entry,flcw,rmlc); }
 	}
       }
