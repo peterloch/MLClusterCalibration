@@ -1,5 +1,5 @@
-#define ClusterTreePionPlotter_cxx
-#include "ClusterTreePionPlotter.h"
+#define ClusterTreePlotter_cxx
+#include "ClusterTreePlotter.h"
 
 #include <TH1D.h>
 #include <TH2D.h>
@@ -9,6 +9,40 @@
 
 #include <vector>
 #include <cmath>
+
+
+  enum class ClusterCalib { RAW=0x01, LCW=0x02  , ML=0x04   , UNKNOWN=0x00 };
+  enum class JetCalib     { RAW=0x11, LCJES=0x12, EMJES=0x14, UNKNOWN=0x00 };
+
+void ClusterTreePlotter::setClusterEmin  (ClusterCalib cc,double e                   ) { key_t key = { (unsigned int)cc, VarType::E   }; m_selectByE  [key] = { e     , -1.   , false }; }
+void ClusterTreePlotter::setClusterPtmin (ClusterCalib cc,double pt                  ) { key_t key = { (unsigned int)cc, VarType::PT  }; m_selectByPt [key] = { pt    , -1.   , false }; }
+void ClusterTreePlotter::setClusterAbsRap(ClusterCalib cc,double rap                 ) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , true  }; }
+void ClusterTreePlotter::setClusterAbsRap(ClusterCalib cc,double rapmin,double rapmax) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rap   , rapmax, true  }; }
+void ClusterTreePlotter::setClusterRap   (ClusterCalib cc,double rap                 ) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , false }; }
+void ClusterTreePlotter::setClusterRap   (ClusterCalib cc,double rapmin,double rapmax) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rapmin, rapmax, false }; }
+
+void ClusterTreePlotter::setJetEMin      (JetCalib jc,,double e                   ) { key_t key = { (unsigned int)jc, VarType::E   }; m_selectByE  [key] = { e     , -1.   , false }; }
+void ClusterTreePlotter::setJetPtMin     (JetCalib jc,,double pt                  ) { key_t key = { (unsigned int)jc, VarType::PT  }; m_selectByPt [key] = { pt    , -1.   , false }; }
+void ClusterTreePlotter::setJetAbsRap    (JetCalib jc,,double rap                 ) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , true  }; }
+void ClusterTreePlotter::setJetAbsRap    (JetCalib jc,,double rapmin,double rapmax) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rap   , rapmax, true  }; }
+void ClusterTreePlotter::setJetRap       (JetCalib jc,,double rap                 ) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , false }; }
+void ClusterTreePlotter::setJetRap       (JetCalib jc,,double rapmin,double rapmax) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rapmin, rapmax, false }; }
+
+bool ClusterTreePlotter::select(ClusterCalib cc) {  ikey = cc; return select(ikey,m_selectByE) && select(ikey,m_selectByPt) && select(ikey,m_selectRap) 
+
+bool ClusterTreePlotter::select(key_t key,const std::map<key_t,frange_t>& map) { 
+  auto fsep(map.find(key)); if ( fsep == map.end() ) { return true; }
+  double e(0.); 
+  switch (cc) {
+  case ClusterCalib::RAW: e = std::get<2>(fsep->second) ? std::abs(clusterE)      : clusterE     ; break;
+  case ClusterCalib::LCW: e = std::get<2>(fsep->second) ? std::abs(clusterECalib) : clusterECalib; break;
+  case ClusterCalib::ML:  e = std::get<2>(fsep->second) ? std::abs(CalibratedE)   : CalibratedE  ; break;
+  case JetCalib::RAW:     e = std::get<2>(fsep->second) ? std::abs(jetRawE)       : jetRawE      ; break;
+  case JetCalib::LCJES:   e = std::get<2>(fsep->second) ? std::abs(jetCalE)       : jetCalE      ; break;
+  default:                                                                                         break;
+  }
+  return std::get<1>(fsep->second) > std::get<0>(fsep->second) ? e > std::get<0>(fsep->second) && e < std::get<1>(fsep->second) : e > std::get<0>(fsep->second); 
+}
 
 void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
 {
