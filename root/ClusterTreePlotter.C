@@ -451,5 +451,6 @@ bool ClusterTreePlotter::newObject() {
       retFlag       = true;
     }
   }
+
   return retFlag; 
 }
