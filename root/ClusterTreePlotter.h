@@ -15,6 +15,8 @@
 #include <TChain.h>
 #include <TTree.h>
 #include <TBranch.h>
+#include <TH1D.h>
+#include <TH2D.h>
 
 #include <vector>
 #include <map>
@@ -26,7 +28,7 @@
 
 // Header file for the classes stored in the TTree if any.
 
-class ClusterTreePionPlotter {
+class ClusterTreePlotter {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
@@ -42,7 +44,7 @@ public :
    Float_t         truthPt 	 = { 0. };
    Float_t         truthEta 	 = { 0. };
    Float_t         truthPhi      = { 0. }; 
-   Float_t         truthPDG;	 = { 0. };
+   Float_t         truthPDG 	 = { 0. };
    // jet tuples		 
    Float_t         jetCalE                   = { 0. };
    Float_t         jetCalPt		     = { 0. };
@@ -136,20 +138,20 @@ public :
    TBranch        *b_truthPhi		        = { (TBranch*)0 }; //!
    TBranch        *b_truthPDG		        = { (TBranch*)0 }; //!
    // jets				        
-   TBranch        *jetCalE                      = { (TBranch*)0 }; //!
-   TBranch        *jetCalPt		        = { (TBranch*)0 }; //!
-   TBranch        *jetCalEta		        = { (TBranch*)0 }; //!
-   TBranch        *jetCalPhi		        = { (TBranch*)0 }; //!
-   TBranch        *jetRawE		        = { (TBranch*)0 }; //!
-   TBranch        *jetRawPt                     = { (TBranch*)0 }; //!
-   TBranch        *jetRawEta		        = { (TBranch*)0 }; //!
-   TBranch        *jetRawPhi		        = { (TBranch*)0 }; //!
-   TBranch        *jetNConst		        = { (TBranch*)0 }; //!
-   TBranch        *truthJetMatchingRadius       = { (TBranch*)0 }; //!
-   TBranch        *truthJetE                    = { (TBranch*)0 }; //!
-   TBranch        *truthJetPt 		        = { (TBranch*)0 }; //!
-   TBranch        *truthJetEta 		        = { (TBranch*)0 }; //!
-   TBranch        *truthJetPhi 		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetCalE                    = { (TBranch*)0 }; //!
+   TBranch        *b_jetCalPt		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetCalEta		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetCalPhi		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetRawE		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetRawPt                   = { (TBranch*)0 }; //!
+   TBranch        *b_jetRawEta		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetRawPhi		        = { (TBranch*)0 }; //!
+   TBranch        *b_jetNConst		        = { (TBranch*)0 }; //!
+   TBranch        *b_truthJetMatchingRadius     = { (TBranch*)0 }; //!
+   TBranch        *b_truthJetE                  = { (TBranch*)0 }; //!
+   TBranch        *b_truthJetPt 	        = { (TBranch*)0 }; //!
+   TBranch        *b_truthJetEta 	        = { (TBranch*)0 }; //!
+   TBranch        *b_truthJetPhi       	        = { (TBranch*)0 }; //!
    // clusters				        
    TBranch        *b_nCluster                   = { (TBranch*)0 }; //!
    TBranch        *b_clusterIndex               = { (TBranch*)0 }; //!
@@ -218,7 +220,7 @@ public :
    TBranch        *b_Delta_E                    = { (TBranch*)0 }; //!
 
   ClusterTreePlotter(TTree *tree=0);
-  virtual ~ClusterPionPlotter(); 
+  virtual ~ClusterTreePlotter(); 
   virtual Int_t    Cut(Long64_t entry);
   virtual Int_t    GetEntry(Long64_t entry);
   virtual Long64_t LoadTree(Long64_t entry);
@@ -229,23 +231,25 @@ public :
 
   virtual void     binNormalize(TH1* h); 
 
-  enum class ClusterScale { RAW=0x11, LCW  =0x12, ML   =0x14,           UNKNOWN=0x00 }; // cluster scales
+  enum class ClusterScale { RAW=0x11, LCW  =0x12, TRUTH=0x14, ML =0x18, UNKNOWN=0x00 }; // cluster scales
   enum class JetScale     { RAW=0x21, LCJES=0x22, TRUTH=0x24,           UNKNOWN=0x00 }; // jet scale
   enum class ParticleScale{                       TRUTH=0x44,           UNKNOWN=0x00 }; // particle scale
-  enum class ValueType    { E  =0x01,   PT =0x02, RAP  =0x04, PDG=0x08, UNKNOWN=0x00 }; // value type
+
+  enum class ValueType    { E=0x01, PT=0x02, RAP=0x04, PDG=0x08, UNKNOWN=0x00 }; // value type
 
   void setParticleEmin  (ParticleScale ps,double e                   );
+  void setParticlePtmin (ParticleScale ps,double pt                  );
   void setParticleAbsRap(ParticleScale ps,double rap                 );
   void setParticleAbsRap(ParticleScale ps,double rapmin,double rapmax);
   void setParticleRap   (ParticleScale ps,double rap                 );
   void setParticleRap   (ParticleScale ps,double rapmin,double rapmax);
 
-  void setClusterEmin  (ClusterScale cs,double e                    );
-  void setClusterPtmin (ClusterScale cs,double pt                   );
-  void setClusterAbsRap(ClusterScale cs,double rap                  );
-  void setClusterAbsRap(ClusterScale cs,double rapmin,double rap,max);
-  void setClusterRap   (ClusterScale cs,double rap                  ); 
-  void setClusterRap   (ClusterScale cs,double rapmin,double rap,max);
+  void setClusterEmin  (ClusterScale cs,double e                   );
+  void setClusterPtmin (ClusterScale cs,double pt                  );
+  void setClusterAbsRap(ClusterScale cs,double rap                 );
+  void setClusterAbsRap(ClusterScale cs,double rapmin,double rapmax);
+  void setClusterRap   (ClusterScale cs,double rap                 ); 
+  void setClusterRap   (ClusterScale cs,double rapmin,double rapmax);
 
   void setJetEMin  (JetScale js,double e                   ); 
   void setJetPtMin (JetScale js,double pt                  ); 
@@ -276,15 +280,16 @@ private:
   // accessors
   typedef std::tuple<ValueType,uint_t> vkey_t;
   typedef Float_t*                     vptr_t;
-  typedef std::map<vkey_t,vptr_t*>     vmap_t;
+  typedef std::map<vkey_t,vptr_t>      vmap_t;
   vmap_t m_accessCluster = { 
-    { { ValueType::E,   (uint_t)ClusterScale::RAW }, &clusterE       },
-    { { ValueType::E,   (uint_t)ClusterScale::LCW }, &clusterECalib  },
-    { { ValueType::E,   (uint_t)ClusterScale::ML  }, &CalibratedE    },
-    { { ValueType::PT,  (uint_t)ClusterScale::RAW }, &clusterPt      },
-    { { ValueType::PT,  (uint_t)ClusterScale::LCW }, &clusterPtCalib },
-    { { ValueType::RAP, (uint_t)ClusterScale::RAW }, &clusterEta     },
-    { { ValueType::RAP, (uint_t)ClusterScale::LCW }, &clusterEtaCalib}
+    { { ValueType::E,   (uint_t)ClusterScale::RAW   }, &clusterE              },
+    { { ValueType::E,   (uint_t)ClusterScale::LCW   }, &clusterECalib         },
+    { { ValueType::E,   (uint_t)ClusterScale::ML    }, &CalibratedE           },
+    { { ValueType::E,   (uint_t)ClusterScale::TRUTH }, &cluster_ENG_CALIB_TOT },
+    { { ValueType::PT,  (uint_t)ClusterScale::RAW   }, &clusterPt             },
+    { { ValueType::PT,  (uint_t)ClusterScale::LCW   }, &clusterPtCalib        },
+    { { ValueType::RAP, (uint_t)ClusterScale::RAW   }, &clusterEta            },
+    { { ValueType::RAP, (uint_t)ClusterScale::LCW   }, &clusterEtaCalib       }
   };
   vmap_t m_accessJet = { 
     { { ValueType::E,   (uint_t)JetScale::RAW   }, &jetRawE    },
@@ -306,28 +311,28 @@ private:
   const vmap_t m_accessEmpty;
 
   // helpers
-  template<class T> bool isClusterKey(T key) { return ( key & 0x10 ) == 0x10; }
-  template<class T> bool isJetKey    (T key) { return ( key & 0x20 ) == 0x20; }
-  template<class T> bool isParticle  (T key) { return ( key & 0x40 ) == 0x40; } 
+  template<class T> bool isClusterKey (T key) { return ( key & 0x10 ) == 0x10; }
+  template<class T> bool isJetKey     (T key) { return ( key & 0x20 ) == 0x20; }
+  template<class T> bool isParticleKey(T key) { return ( key & 0x40 ) == 0x40; } 
   template<class T> bool fillValue(ValueType vtype,uint_t vscale,T& val) {
-    const vmap_t& map = isParticleKey<uint_t>(vscale) 
-      ? m_accessParticle 
-      : isJetKey<uint_t>(vscale)
-      ? m_accessJet 
-      : isClusterKey<uint_t>(vscale)
-      ? m_accessCluster
+    const auto& vmap = 
+      isParticleKey<uint_t>(vscale)  ? m_accessParticle 
+      : isJetKey<uint_t>(vscale)     ? m_accessJet 
+      : isClusterKey<uint_t>(vscale) ? m_accessCluster
       : m_accessEmpty; 
-    auto fval(m_access.find(vtype)); if ( fval != m_access.end() ) { val = (T)*(fval->second); return true; } else { return false; }
+    auto fval(vmap.find({vtype,vscale})); if ( fval != vmap.end() ) { val = (T)*(fval->second); return true; } else { return false; }
   }
 
   bool isParticle();
   bool isJet()     ;
 
   // -- state control
-  double m_truthPDG   = { 0. };
-  double m_truthE     = { 0. };
-  double m_truthJetE  = { 0. };
-  double m_truthJetPt = { 0. };
+  Float_t m_runNumber   = { 0. };
+  Float_t m_eventNumber = { 0. };
+  Float_t m_truthPDG    = { 0. };
+  Float_t m_truthE      = { 0. };
+  Float_t m_truthJetPt  = { 0. };
+  Float_t m_truthJetEta = { 0. };
 
 protected:
   virtual bool hasBookedLeaf(const std::string& lname);
@@ -335,17 +340,128 @@ protected:
   virtual bool filter(ClusterScale  cs); 
   virtual bool filter(JetScale      js); 
   virtual bool filter(ParticleScale ps); 
+  virtual bool select(uint_t key); 
+
   virtual bool newEvent();   // new simulation event
   virtual bool newObject();  // new particle or jet
 
   virtual bool fillParticle(bool final=false);
   virtual bool fillJet     (bool final=false); 
+
+private:
+
+   // -- particle quantities
+   TH1D* h_part_e_all_incl   = { (TH1D*)0 };
+   TH1D* h_part_e_pi0_incl   = { (TH1D*)0 };
+   TH1D* h_part_e_pic_incl   = { (TH1D*)0 };
+   TH1D* h_part_e_all_excl   = { (TH1D*)0 };
+   TH1D* h_part_e_pi0_excl   = { (TH1D*)0 };
+   TH1D* h_part_e_pic_excl   = { (TH1D*)0 };
+   TH1D* h_part_rap_all_incl = { (TH1D*)0 };
+   TH1D* h_part_rap_pi0_incl = { (TH1D*)0 };
+   TH1D* h_part_rap_pic_incl = { (TH1D*)0 };
+   TH1D* h_part_rap_all_excl = { (TH1D*)0 };
+   TH1D* h_part_rap_pi0_excl = { (TH1D*)0 };
+   TH1D* h_part_rap_pic_excl = { (TH1D*)0 };
+
+   // -- jet quantities
+   TH1D* h_jet_cale_incl     = { (TH1D*)0 };
+   TH1D* h_jet_calpt_incl    = { (TH1D*)0 };
+   TH1D* h_jet_calrap_incl   = { (TH1D*)0 };
+   TH1D* h_jet_cale_excl     = { (TH1D*)0 };
+   TH1D* h_jet_calpt_excl    = { (TH1D*)0 };
+   TH1D* h_jet_calrap_excl   = { (TH1D*)0 };
+   TH1D* h_jet_truthe_incl   = { (TH1D*)0 };
+   TH1D* h_jet_truthpt_incl  = { (TH1D*)0 };
+   TH1D* h_jet_truthrap_incl = { (TH1D*)0 };
+   TH1D* h_jet_truthdR_incl  = { (TH1D*)0 };
+   TH1D* h_jet_truthe_excl   = { (TH1D*)0 };
+   TH1D* h_jet_truthpt_excl  = { (TH1D*)0 };
+   TH1D* h_jet_truthrap_excl = { (TH1D*)0 };
+   TH1D* h_jet_truthdR_excl  = { (TH1D*)0 };
+
+   // -- cluster quantities
+   TH1D* h_clus_rap_all = { (TH1D*)0 };
+   TH1D* h_clus_rap_acc = { (TH1D*)0 };
+   TH1D* h_clus_dep_all = { (TH1D*)0 };
+   TH1D* h_clus_dep_acc = { (TH1D*)0 };
+   TH1D* h_clus_eem_all = { (TH1D*)0 };
+   TH1D* h_clus_eem_acc = { (TH1D*)0 };
+   TH1D* h_clus_lcw_all = { (TH1D*)0 };
+   TH1D* h_clus_lcw_acc = { (TH1D*)0 };
+   TH1D* h_clus_eml_all = { (TH1D*)0 };
+   TH1D* h_clus_eml_acc = { (TH1D*)0 };
+
+   // -- evaluation scale: deposited energy
+   TH2D* d_em_resp_edep_incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_edep_incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_edep_incl = { (TH2D*)0 };
+   TH2D* d_em_resp_edep_e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_edep_e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_edep_e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: signal density
+   TH2D* d_em_resp_rho__incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_rho__incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_rho__incl = { (TH2D*)0 };
+   TH2D* d_em_resp_rho__e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_rho__e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_rho__e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: depth
+   TH2D* d_em_resp_lamb_incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_lamb_incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_lamb_incl = { (TH2D*)0 };
+   TH2D* d_em_resp_lamb_e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_lamb_e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_lamb_e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: longitudinal energy dispersion
+   TH2D* d_em_resp_long_incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_long_incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_long_incl = { (TH2D*)0 };
+   TH2D* d_em_resp_long_e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_long_e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_long_e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: lateral energy dispersion
+   TH2D* d_em_resp_lat__incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_lat__incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_lat__incl = { (TH2D*)0 };
+   TH2D* d_em_resp_lat__e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_lat__e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_lat__e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: signal significance
+   TH2D* d_em_resp_sign_incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_sign_incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_sign_incl = { (TH2D*)0 };
+   TH2D* d_em_resp_sign_e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_sign_e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_sign_e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: PtD
+   TH2D* d_em_resp_ptd__incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_ptd__incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_ptd__incl = { (TH2D*)0 };
+   TH2D* d_em_resp_ptd__e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_ptd__e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_ptd__e300 = { (TH2D*)0 };
+
+   // -- evaluation scale: second moment of time
+   TH2D* d_em_resp_time_incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_time_incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_time_incl = { (TH2D*)0 };
+   TH2D* d_em_resp_time_e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_time_e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_time_e300 = { (TH2D*)0 };
+
 };
 
 #endif
 
 #ifdef ClusterTreePlotter_cxx
-ClusterTreePionPlotter::ClusterTreePionPlotter(TTree *tree) : fChain(0) 
+ClusterTreePlotter::ClusterTreePlotter(TTree *tree) : fChain(0) 
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
@@ -362,19 +478,19 @@ ClusterTreePionPlotter::ClusterTreePionPlotter(TTree *tree) : fChain(0)
    }
 }
 
-ClusterTreePionPlotter::~ClusterTreePionPlotter()
+ClusterTreePlotter::~ClusterTreePlotter()
 {
    if (!fChain) return;
    delete fChain->GetCurrentFile();
 }
 
-Int_t ClusterTreePionPlotter::GetEntry(Long64_t entry)
+Int_t ClusterTreePlotter::GetEntry(Long64_t entry)
 {
 // Read contents of entry.
    if (!fChain) return 0;
    return fChain->GetEntry(entry);
 }
-Long64_t ClusterTreePionPlotter::LoadTree(Long64_t entry)
+Long64_t ClusterTreePlotter::LoadTree(Long64_t entry)
 {
 // Set the environment to read one entry
    if (!fChain) return -5;
@@ -387,7 +503,7 @@ Long64_t ClusterTreePionPlotter::LoadTree(Long64_t entry)
    return centry;
 }
 
-void ClusterTreePionPlotter::Init(TTree *tree)
+void ClusterTreePlotter::Init(TTree *tree)
 {
    // The Init() function is called when the selector needs to initialize
    // a new tree or chain. Typically here the branch addresses and branch
@@ -498,30 +614,30 @@ void ClusterTreePionPlotter::Init(TTree *tree)
    Notify();
 }
 
-Bool_t ClusterTreePionPlotter::Notify()
+Bool_t ClusterTreePlotter::Notify()
 {
    // The Notify() function is called when a new file is opened. This
    // can be either for a new TTree in a TChain or when when a new TTree
    // is started when using PROOF. It is normally not necessary to make changes
    // to the generated code, but the routine can be extended by the
    // user if needed. The return value is currently not used.
-  std::string kana = m_listOfLeaves.find("jetCalPt") != m_listOfLeaves.end() ? "jet" ? "single particle";
+  std::string kana = m_listOfLeaves.find("jetCalPt") != m_listOfLeaves.end() ? "jet" : "single particle";
   printf("[ClusterTreePlotter::Init()] INFO booked %zu branches for %s analysis\n",m_listOfLeaves.size(),kana.c_str());
   return kTRUE;
 }
 
-void ClusterTreePionPlotter::Show(Long64_t entry)
+void ClusterTreePlotter::Show(Long64_t entry)
 {
 // Print contents of entry.
 // If entry is not specified, print current entry
    if (!fChain) return;
    fChain->Show(entry);
 }
-Int_t ClusterTreePionPlotter::Cut(Long64_t entry)
+Int_t ClusterTreePlotter::Cut(Long64_t entry)
 {
 // This function may be called from Loop.
 // returns  1 if entry is accepted.
 // returns -1 otherwise.
    return 1;
 }
-#endif // #ifdef ClusterTreePionPlotter_cxx
+#endif // #ifdef ClusterTreePlotter_cxx
