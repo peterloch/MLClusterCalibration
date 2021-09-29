@@ -218,7 +218,7 @@ public :
    TBranch        *b_Delta_E                    = { (TBranch*)0 }; //!
 
   ClusterTreePlotter(TTree *tree=0);
-  virtual ~ClusterPionPlotter();
+  virtual ~ClusterPionPlotter(); 
   virtual Int_t    Cut(Long64_t entry);
   virtual Int_t    GetEntry(Long64_t entry);
   virtual Long64_t LoadTree(Long64_t entry);
@@ -229,10 +229,10 @@ public :
 
   virtual void     binNormalize(TH1* h); 
 
-  enum class ClusterScale { RAW=0x11, LCW=0x12  , ML=0x14 ,           UNKNOWN=0x00 }; // cluster scales
-  enum class JetScale     { RAW=0x21, LCJES=0x22, TRUTH=0x24,         UNKNOWN=0x00 }; // jet scale
-  enum class ParticleScale{                       TRUTH=0x44,         UNKNOWN=0x00 }; // particle scale
-  enum class ValueType    { E=0x01,   PT=0x02,    RAP=0x04, PDG=0x08, UNKNOWN=0x00 }; // value type
+  enum class ClusterScale { RAW=0x11, LCW  =0x12, ML   =0x14,           UNKNOWN=0x00 }; // cluster scales
+  enum class JetScale     { RAW=0x21, LCJES=0x22, TRUTH=0x24,           UNKNOWN=0x00 }; // jet scale
+  enum class ParticleScale{                       TRUTH=0x44,           UNKNOWN=0x00 }; // particle scale
+  enum class ValueType    { E  =0x01,   PT =0x02, RAP  =0x04, PDG=0x08, UNKNOWN=0x00 }; // value type
 
   void setParticleEmin  (ParticleScale ps,double e                   );
   void setParticleAbsRap(ParticleScale ps,double rap                 );
@@ -304,12 +304,24 @@ private:
     { { ValueType::PDG, (uint_t)ParticleScale::TRUTH }, &truthPDG}
   };
   const vmap_t m_accessEmpty;
-  double value(ValueType vtype,uint_t vscale);
 
   // helpers
-  template<class T> bool isCluster(T key)  { return ( key & 0x10 ) == 0x10; }
-  template<class T> bool isJet(T key)      { return ( key & 0x20 ) == 0x20; }
-  template<class T> bool isParticle(T key) { return ( key & 0x40 ) == 0x40; } 
+  template<class T> bool isClusterKey(T key) { return ( key & 0x10 ) == 0x10; }
+  template<class T> bool isJetKey    (T key) { return ( key & 0x20 ) == 0x20; }
+  template<class T> bool isParticle  (T key) { return ( key & 0x40 ) == 0x40; } 
+  template<class T> bool fillValue(ValueType vtype,uint_t vscale,T& val) {
+    const vmap_t& map = isParticleKey(vscale) 
+      ? m_accessParticle 
+      : isJetKey<uint_t>(vscale)
+      ? m_accessJet 
+      : isClusterKey<uint_t>(vscale)
+      ? m_accessCluster
+      : m_accessEmpty; 
+    auto fval(m_access.find(vtype)); if ( fval != m_access.end() ) { val = (T)*(fval->second); return true; } else { return false; }
+  }
+
+  bool isParticle();
+  bool isJet()     ;
 
 protected:
   virtual bool hasBookedLeaf(const std::string& lname);
@@ -319,6 +331,9 @@ protected:
   virtual bool filter(ParticleScale ps); 
   virtual bool newEvent();   // new simulation event
   virtual bool newObject();  // new particle or jet
+
+  virtual bool fillObject(ParticleScale ps,bool final=false);
+  virtual bool fillObject(JetScale      js,bool final=false); 
 };
 
 #endif
