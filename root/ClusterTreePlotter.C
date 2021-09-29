@@ -242,11 +242,13 @@ void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
       // double ppdg = absVal ? std::abs(truthPDG) : truthPDG; 
       // if ( pdgID != 0 && ppdg != pdgID ) { continue; }
       // kentry++;
-      fillObject(ParticleScale::TRUTH,false); 
-      fillObject(JetScale::TRUTH,false); 
+      fillParticle(false); 
+      fillJet(false); 
       // cluster selection by particle or jet
       if ( !filter(ParticleScale::TRUTH) || !filter(JetScale::LCJES) ) { continue; } 
       kentry++;
+      fillParticle(true); 
+      fillJet(true); 
       // cluster selection by cluster
       if ( !filter(ClusterScale::TRUTH) || !filter(ClusterScale::LCW) ) { continue; }
       lentry++;
@@ -341,6 +343,22 @@ void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
    binNormalize(h_clus_lcw_acc);
    binNormalize(h_clus_eml_all);
    binNormalize(h_clus_eml_acc);
+   binNormalize(h_part_e_all_incl );   
+   binNormalize(h_part_e_pi0_incl );   
+   binNormalize(h_part_e_pic_incl );   
+   binNormalize(h_part_e_all_excl );   
+   binNormalize(h_part_e_pi0_excl );   
+   binNormalize(h_part_e_pic_excl );   
+   binNormalize(h_jet_cale_incl   );  
+   binNormalize(h_jet_calpt_incl  );  
+   binNormalize(h_jet_cale_excl   );  
+   binNormalize(h_jet_calpt_excl  );  
+   binNormalize(h_jet_truthe_incl );  
+   binNormalize(h_jet_truthpt_incl);  
+   binNormalize(h_jet_truthdR_incl);  
+   binNormalize(h_jet_truthe_excl );  
+   binNormalize(h_jet_truthpt_excl);  
+
    // -- write 
    TFile* outf = new TFile("ml_pions.hist.root","RECREATE");
    HistManager::instance()->write();
@@ -348,9 +366,10 @@ void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
 }
 
 void ClusterTreePionPlotter::binNormalize(TH1* hptr) {
+  double nenOld(hptr->GetEntries());
+  if ( nenOld == 0. ) { return; }
   double intOld(0.); 
   double intNew(0.); 
-  double nenOld(hptr->GetEntries());
   for ( int i(1); i<=hptr->GetNbinsX(); ++i ) { 
     double xwidth(hptr->GetBinWidth(i));
     double yval(hptr->GetBinContent(i)); intOld += yval;
@@ -364,61 +383,71 @@ void ClusterTreePionPlotter::binNormalize(TH1* hptr) {
   printf("[ClusterTreePionPlotter::binNormalize()] INFO integral (old/new): %.3f/%.3f\n",intOld,intNew); 
 }
 
-bool ClusterTreePlotter::fillObject(ParticleScale vscale,bool final) {
+bool ClusterTreePlotter::fillParticle(bool final) {
   if ( !isParticle() || !newObject() ) { return false; }
-  if ( vscale != ParticleScale::TRUTH ) { printf("[ClusterTreePlotter::fillObject()] WARN unknown particle energy scale %i (available %i)\n",(int)vscale,(int)ParticleScale::TRUTH); return false; }
   int partid(0); 
-  bool doParticle(fillValue<int>(ValueType::PDG,vscale,partid));
+  bool doParticle(fillValue<int>(ValueType::PDG,ParticleScale::TRUTH,partid));
   bool doNeutral(doParticle && std::abs(partid) == 111);
   bool doCharged(doParticle && std::abs(partid) == 211);
   if ( final ) { 
-    double etruth(0.); if ( fillValue<double>(ValueType::E  ,vscale,etruth) ) { h_part_e_all_excl  ->Fill(etruth); if ( doNeutral ) { h_part_e_pi0_excl  ->Fill(etruth); } if ( doCharged ) { h_part_e_pic_excl  ->Fill(etruth); } } 
-    double ytruth(0.); if ( fillValue<double>(ValueType::RAP,vscale,ytruth) ) { h_part_rap_all_excl->Fill(ytruth); if ( doNeutral ) { h_part_rap_pi0_excl->Fill(ytruth); } if ( doCharged ) { h_part_rap_pic_excl->Fill(ytruth); } }  
+    double etruth(0.); if ( fillValue<double>(ValueType::E  ,ParticleScale::TRUTH,etruth) ) { h_part_e_all_excl  ->Fill(etruth); if ( doNeutral ) { h_part_e_pi0_excl  ->Fill(etruth); } if ( doCharged ) { h_part_e_pic_excl  ->Fill(etruth); } } 
+    double ytruth(0.); if ( fillValue<double>(ValueType::RAP,ParticleScale::TRUTH,ytruth) ) { h_part_rap_all_excl->Fill(ytruth); if ( doNeutral ) { h_part_rap_pi0_excl->Fill(ytruth); } if ( doCharged ) { h_part_rap_pic_excl->Fill(ytruth); } }  
   } else {
-    double etruth(0.); if ( fillValue<double>(ValueType::E  ,vscale,etruth) ) { h_part_e_all_incl  ->Fill(etruth); if ( doNeutral ) { h_part_e_pi0_incl  ->Fill(etruth); } if ( doCharged ) { h_part_e_pic_incl  ->Fill(etruth); } } 
-    double ytruth(0.); if ( fillValue<double>(ValueType::RAP,vscale,ytruth) ) { h_part_rap_all_incl->Fill(ytruth); if ( doNeutral ) { h_part_rap_pi0_incl->Fill(ytruth); } if ( doCharged ) { h_part_rap_pic_incl->Fill(ytruth); } }  
+    double etruth(0.); if ( fillValue<double>(ValueType::E  ,ParticleScale::TRUTH,etruth) ) { h_part_e_all_incl  ->Fill(etruth); if ( doNeutral ) { h_part_e_pi0_incl  ->Fill(etruth); } if ( doCharged ) { h_part_e_pic_incl  ->Fill(etruth); } } 
+    double ytruth(0.); if ( fillValue<double>(ValueType::RAP,ParticleScale::TRUTH,ytruth) ) { h_part_rap_all_incl->Fill(ytruth); if ( doNeutral ) { h_part_rap_pi0_incl->Fill(ytruth); } if ( doCharged ) { h_part_rap_pic_incl->Fill(ytruth); } }  
   } 
   return true;
 }
 
-bool ClusterTreePlotter::fillObject(JetScale /*vscale*/,bool final) {
+bool ClusterTreePlotter::fillJet(bool final) {
   if ( !isJet() || !newObject() ) { return false; }
+  double etruth(0.); double ytruth(0.); double ptruth(0.); double ecalib(0.); double ycalib(0.); double pcalib(0.);
+  unsigned int ifill(0); 
   if ( final ) { 
-    double etruth(0.); double ytruth(0.); double ptruth(0.); double ecalib(0.); double ycalib(0.); double pcalib(0.);
-    switch ( vscale ) { 
-    case JetScale::TRUTH:
-      if ( fillValue<double>(ValueType::E  ,JetScale::TRUTH,etruth) ) { h_jet_truthe_excl  ->Fill(etruth); }      
-      if ( fillValue<double>(ValueType::PT ,JetScale::TRUTH,ptruth) ) { h_jet_truthpt_excl ->Fill(ptruth); }
-      if ( fillValue<double>(ValueType::RAP,JetScale::TRUTH,ytruth) ) { h_jet_truthrap_excl->Fill(ytruth); }
-      h_jet_truthdR_excl->Fill(truthJetMatchingRadius); 
-      break;
-    case JetScale::LCJES:
-      if ( fillValue<double>(ValueType::E  ,JetScale::TRUTH,etruth) ) { h_jet_cale_excl  ->Fill(etruth); }
-      if ( fillValue<double>(ValueType::PT ,JetScale::TRUTH,ptruth) ) { h_jet_calpt_excl ->Fill(ptruth); }
-      if ( fillValue<double>(ValueType::RAP,JetScale::TRUTH,ytruth) ) { h_jet_calrap_excl->Fill(ytruth); }
-      break;
-    default:
-      break;
-    }
+    if ( fillValue<double>(ValueType::E  ,JetScale::TRUTH,etruth) ) { h_jet_truthe_excl  ->Fill(etruth); ++ifill; }      
+    if ( fillValue<double>(ValueType::PT ,JetScale::TRUTH,ptruth) ) { h_jet_truthpt_excl ->Fill(ptruth); ++ifill; }
+    if ( fillValue<double>(ValueType::RAP,JetScale::TRUTH,ytruth) ) { h_jet_truthrap_excl->Fill(ytruth); ++ifill; }
+    h_jet_truthdR_excl->Fill(truthJetMatchingRadius); 
+    if ( fillValue<double>(ValueType::E  ,JetScale::LCJES,ecalib) ) { h_jet_cale_excl  ->Fill(ecalib); ++ifill; }
+    if ( fillValue<double>(ValueType::PT ,JetScale::LCJES,pcalib) ) { h_jet_calpt_excl ->Fill(pcalib); ++ifill; }
+    if ( fillValue<double>(ValueType::RAP,JetScale::LCJES,ycalib) ) { h_jet_calrap_excl->Fill(ycalib); ++ifill; }
   } else {
-    double etruth(0.); double ytruth(0.); double ptruth(0.); double ecalib(0.); double ycalib(0.); double pcalib(0.);
-    switch ( vscale ) { 
-    case JetScale::TRUTH:
-      if ( fillValue<double>(ValueType::E  ,JetScale::TRUTH,etruth) ) { h_jet_truthe_incl  ->Fill(etruth); }      
-      if ( fillValue<double>(ValueType::PT ,JetScale::TRUTH,ptruth) ) { h_jet_truthpt_incl ->Fill(ptruth); }
-      if ( fillValue<double>(ValueType::RAP,JetScale::TRUTH,ytruth) ) { h_jet_truthrap_incl->Fill(ytruth); }
-      h_jet_truthdR_incl->Fill(truthJetMatchingRadius); 
-      break;
-    case JetScale::LCJES:
-      if ( fillValue<double>(ValueType::E  ,JetScale::TRUTH,etruth) ) { h_jet_cale_incl  ->Fill(etruth); }
-      if ( fillValue<double>(ValueType::PT ,JetScale::TRUTH,ptruth) ) { h_jet_calpt_incl ->Fill(ptruth); }
-      if ( fillValue<double>(ValueType::RAP,JetScale::TRUTH,ytruth) ) { h_jet_calrap_incl->Fill(ytruth); }
-      break;
-    default:
-      break;
-    }
-  } 
+    if ( fillValue<double>(ValueType::E  ,JetScale::TRUTH,etruth) ) { h_jet_truthe_incl  ->Fill(etruth); ++ifill; }      
+    if ( fillValue<double>(ValueType::PT ,JetScale::TRUTH,ptruth) ) { h_jet_truthpt_incl ->Fill(ptruth); ++ifill; }
+    if ( fillValue<double>(ValueType::RAP,JetScale::TRUTH,ytruth) ) { h_jet_truthrap_incl->Fill(ytruth); ++ifill; }
+    h_jet_truthdR_incl->Fill(truthJetMatchingRadius); 
+    if ( fillValue<double>(ValueType::E  ,JetScale::LCJES,ecalib) ) { h_jet_cale_incl  ->Fill(ecalib); ++ifill; }
+    if ( fillValue<double>(ValueType::PT ,JetScale::LCJES,pcalib) ) { h_jet_calpt_incl ->Fill(pcalib); ++ifill; }
+    if ( fillValue<double>(ValueType::RAP,JetScale::LCJES,ycalib) ) { h_jet_calrap_incl->Fill(ycalib); ++ifill; }
+  }
+  return ifill>0;
 }
 
 bool ClusterTreePlotter::fillObject(ClusterScale /*vscale*/,bool /*final*/) { return true; } 
 
+bool ClusterTreePlotter::newEvent() { 
+  if ( runNumber != m_runNumber || eventNumber != m_eventNumber ) { 
+    m_runNumber   = runNumber; 
+    m_eventNumber = eventNumber;
+    return true;
+  }
+  return false; 
+}
+
+bool ClusterTreePlotter::newObject() {
+  if ( isParticle() ) { 
+    if ( m_truthPDG != truthPDG || m_truthE != truthE ) { 
+      m_truthPDG = truthPDG; 
+      m_truthE   = truthE;
+      return true;
+    }
+    return false; 
+  } else if ( isJet() ) { 
+    if ( m_truthJetPt != truthJetPt || m_truthJetEta != truthJetEta ) { 
+      m_truthJetPt = truthJetPt;
+      m_truthJetEta = truthJetEta;
+      return true;
+    }
+    return false;
+  }
+}

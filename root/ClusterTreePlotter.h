@@ -310,7 +310,7 @@ private:
   template<class T> bool isJetKey    (T key) { return ( key & 0x20 ) == 0x20; }
   template<class T> bool isParticle  (T key) { return ( key & 0x40 ) == 0x40; } 
   template<class T> bool fillValue(ValueType vtype,uint_t vscale,T& val) {
-    const vmap_t& map = isParticleKey(vscale) 
+    const vmap_t& map = isParticleKey<uint_t>(vscale) 
       ? m_accessParticle 
       : isJetKey<uint_t>(vscale)
       ? m_accessJet 
@@ -323,6 +323,12 @@ private:
   bool isParticle();
   bool isJet()     ;
 
+  // -- state control
+  double m_truthPDG   = { 0. };
+  double m_truthE     = { 0. };
+  double m_truthJetE  = { 0. };
+  double m_truthJetPt = { 0. };
+
 protected:
   virtual bool hasBookedLeaf(const std::string& lname);
 
@@ -332,8 +338,8 @@ protected:
   virtual bool newEvent();   // new simulation event
   virtual bool newObject();  // new particle or jet
 
-  virtual bool fillObject(ParticleScale ps,bool final=false);
-  virtual bool fillObject(JetScale      js,bool final=false); 
+  virtual bool fillParticle(bool final=false);
+  virtual bool fillJet     (bool final=false); 
 };
 
 #endif
