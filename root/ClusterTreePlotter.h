@@ -229,9 +229,9 @@ public :
 
   virtual void     binNormalize(TH1* h); 
 
-  enum class ClusterScale { RAW=0x01, LCW=0x02  , ML=0x04 ,           UNKNOWN=0x00 }; // cluster scales
-  enum class JetScale     { RAW=0x11, LCJES=0x12,                     UNKNOWN=0x00 }; // jet scale
-  enum class ParticleScale{ RAW=0x12,                                 UNKNOWN=0x00 }; // particle scale
+  enum class ClusterScale { RAW=0x11, LCW=0x12  , ML=0x14 ,           UNKNOWN=0x00 }; // cluster scales
+  enum class JetScale     { RAW=0x21, LCJES=0x22, TRUTH=0x24,         UNKNOWN=0x00 }; // jet scale
+  enum class ParticleScale{                       TRUTH=0x44,         UNKNOWN=0x00 }; // particle scale
   enum class ValueType    { E=0x01,   PT=0x02,    RAP=0x04, PDG=0x08, UNKNOWN=0x00 }; // value type
 
   void setParticleEmin  (ParticleScale ps,double e                   );
@@ -247,29 +247,76 @@ public :
   void setClusterRap   (ClusterScale cs,double rap                  ); 
   void setClusterRap   (ClusterScale cs,double rapmin,double rap,max);
 
-  void setJetEMin  (JetScale js,,double e                   ); 
-  void setJetPtMin (JetScale js,,double pt                  ); 
-  void setJetAbsRap(JetScale js,,double rap                 );
-  void setJetAbsRap(JetScale js,,double rapmin,double rapmax);
-  void setJetRap   (JetScale js,,double rap                 );
-  void setJetRap   (JetScale js,,double rapmin,double rapmax);
+  void setJetEMin  (JetScale js,double e                   ); 
+  void setJetPtMin (JetScale js,double pt                  ); 
+  void setJetAbsRap(JetScale js,double rap                 );
+  void setJetAbsRap(JetScale js,double rapmin,double rapmax);
+  void setJetRap   (JetScale js,double rap                 );
+  void setJetRap   (JetScale js,double rapmin,double rapmax);
 
 private:
+
+  // production flags 
+  bool m_isParticle  = { false };
+  bool m_isJet       = { false }; 
+
   // list of leaves
   std::map<std::string,bool> m_listOfLeaves;
+
   // event/object tag 
   int    m_event = { -1 };
   double m_jetPt = { 0. };
+
   // selections
-  typedef std::tuple<unsigned int>                 key_t;
-  typedef std::tuple<ValueType,double,double,bool> frange_t;
-  std::multimap<key_t,frange_t>                    m_selectors;
+  typedef unsigned int                               uint_t;
+  typedef uint_t                                     key_t;
+  typedef std::tuple<ValueType,Float_t,Float_t,bool> frange_t;
+  std::multimap<key_t,frange_t>                      m_selectors;
+
+  // accessors
+  typedef std::tuple<ValueType,uint_t> vkey_t;
+  typedef Float_t*                     vptr_t;
+  typedef std::map<vkey_t,vptr_t*>     vmap_t;
+  vmap_t m_accessCluster = { 
+    { { ValueType::E,   (uint_t)ClusterScale::RAW }, &clusterE       },
+    { { ValueType::E,   (uint_t)ClusterScale::LCW }, &clusterECalib  },
+    { { ValueType::E,   (uint_t)ClusterScale::ML  }, &CalibratedE    },
+    { { ValueType::PT,  (uint_t)ClusterScale::RAW }, &clusterPt      },
+    { { ValueType::PT,  (uint_t)ClusterScale::LCW }, &clusterPtCalib },
+    { { ValueType::RAP, (uint_t)ClusterScale::RAW }, &clusterEta     },
+    { { ValueType::RAP, (uint_t)ClusterScale::LCW }, &clusterEtaCalib}
+  };
+  vmap_t m_accessJet = { 
+    { { ValueType::E,   (uint_t)JetScale::RAW   }, &jetRawE    },
+    { { ValueType::E,   (uint_t)JetScale::LCJES }, &jetCalE    },
+    { { ValueType::E,   (uint_t)JetScale::TRUTH }, &truthJetE  },
+    { { ValueType::PT,  (uint_t)JetScale::RAW   }, &jetRawPt   },
+    { { ValueType::PT,  (uint_t)JetScale::LCJES }, &jetCalPt   },
+    { { ValueType::PT,  (uint_t)JetScale::TRUTH }, &truthJetPt },
+    { { ValueType::RAP, (uint_t)JetScale::RAW   }, &jetRawEta  },
+    { { ValueType::RAP, (uint_t)JetScale::LCJES }, &jetCalEta  },
+    { { ValueType::RAP, (uint_t)JetScale::TRUTH }, &truthJetEta}
+  };
+  vmap_t m_accessParticle = { 
+    { { ValueType::E,   (uint_t)ParticleScale::TRUTH }, &truthE  },
+    { { ValueType::PT,  (uint_t)ParticleScale::TRUTH }, &truthPt },
+    { { ValueType::RAP, (uint_t)ParticleScale::TRUTH }, &truthEta},
+    { { ValueType::PDG, (uint_t)ParticleScale::TRUTH }, &truthPDG}
+  };
+  const vmap_t m_accessEmpty;
+  double value(ValueType vtype,uint_t vscale);
+
+  // helpers
+  template<class T> bool isCluster(T key)  { return ( key & 0x10 ) == 0x10; }
+  template<class T> bool isJet(T key)      { return ( key & 0x20 ) == 0x20; }
+  template<class T> bool isParticle(T key) { return ( key & 0x40 ) == 0x40; } 
 
 protected:
+  virtual bool hasBookedLeaf(const std::string& lname);
+
   virtual bool filter(ClusterScale  cs); 
   virtual bool filter(JetScale      js); 
   virtual bool filter(ParticleScale ps); 
-
   virtual bool newEvent();   // new simulation event
   virtual bool newObject();  // new particle or jet
 };
@@ -291,6 +338,7 @@ ClusterTreePionPlotter::ClusterTreePionPlotter(TTree *tree) : fChain(0)
    } else { 
      printf("[ClusterTreePlotter::ClusterTreePlotter()] INFO initialize tree \042%s\042\n",tree->GetName());
      Init(tree);
+   }
 }
 
 ClusterTreePionPlotter::~ClusterTreePionPlotter()
@@ -421,6 +469,11 @@ void ClusterTreePionPlotter::Init(TTree *tree)
    if ( fChain->FindLeaf("CalibratedE"                ) != nullptr ) { m_listOfLeaves["CalibratedE"               ] = false; fChain->SetBranchAddress("CalibratedE"                ,&CalibratedE               ,&b_CalibratedE               ); }
    if ( fChain->FindLeaf("Delta_Calib_E "             ) != nullptr ) { m_listOfLeaves["Delta_Calib_E "            ] = false; fChain->SetBranchAddress("Delta_Calib_E "             ,&Delta_Calib_E             ,&b_Delta_Calib_E             ); }
    if ( fChain->FindLeaf("Delta_E"                    ) != nullptr ) { m_listOfLeaves["Delta_E"                   ] = false; fChain->SetBranchAddress("Delta_E"                    ,&Delta_E                   ,&b_Delta_E                   ); }
+
+   if ( b_truthE  != nullptr )    { m_isParticle = true; printf("[ClusterPlotterTree::Init()] INFO clusters in particles analysis\n"); }
+   if ( b_jetCalE != nullptr )    { m_isJet      = true; printf("[ClusterPlotterTree::Init()] INFO clusters in jets analysis\n"     ); }
+   if ( m_isParticle && m_isJet ) {                      printf("[ClusterTreePlotter::Init()] WARN mixed mode!\n"                   ); }
+ 
    Notify();
 }
 

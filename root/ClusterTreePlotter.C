@@ -10,39 +10,93 @@
 #include <vector>
 #include <cmath>
 
+/////////////////////
+// Production mode //
+/////////////////////
 
-  enum class ClusterCalib { RAW=0x01, LCW=0x02  , ML=0x04   , UNKNOWN=0x00 };
-  enum class JetCalib     { RAW=0x11, LCJES=0x12, EMJES=0x14, UNKNOWN=0x00 };
+bool ClusterTreePlotter::hasBookedLeaf(const std::string& lname) { return m_listOfLeaves.find(lname) != m_listOfLeaves.end(); }
+bool ClusterTreePlotter::isJet()                                 { return m_isJet;      }
+bool ClusterTreePlotter::isParticle()                            { return m_isParticle; }
 
-void ClusterTreePlotter::setClusterEmin  (ClusterCalib cc,double e                   ) { key_t key = { (unsigned int)cc, VarType::E   }; m_selectByE  [key] = { e     , -1.   , false }; }
-void ClusterTreePlotter::setClusterPtmin (ClusterCalib cc,double pt                  ) { key_t key = { (unsigned int)cc, VarType::PT  }; m_selectByPt [key] = { pt    , -1.   , false }; }
-void ClusterTreePlotter::setClusterAbsRap(ClusterCalib cc,double rap                 ) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , true  }; }
-void ClusterTreePlotter::setClusterAbsRap(ClusterCalib cc,double rapmin,double rapmax) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rap   , rapmax, true  }; }
-void ClusterTreePlotter::setClusterRap   (ClusterCalib cc,double rap                 ) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , false }; }
-void ClusterTreePlotter::setClusterRap   (ClusterCalib cc,double rapmin,double rapmax) { key_t key = { (unsigned int)cc, VarType::RAP }; m_selectByRap[key] = { rapmin, rapmax, false }; }
+///////////////////////
+// Setting Selectors //
+///////////////////////
 
-void ClusterTreePlotter::setJetEMin      (JetCalib jc,,double e                   ) { key_t key = { (unsigned int)jc, VarType::E   }; m_selectByE  [key] = { e     , -1.   , false }; }
-void ClusterTreePlotter::setJetPtMin     (JetCalib jc,,double pt                  ) { key_t key = { (unsigned int)jc, VarType::PT  }; m_selectByPt [key] = { pt    , -1.   , false }; }
-void ClusterTreePlotter::setJetAbsRap    (JetCalib jc,,double rap                 ) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , true  }; }
-void ClusterTreePlotter::setJetAbsRap    (JetCalib jc,,double rapmin,double rapmax) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rap   , rapmax, true  }; }
-void ClusterTreePlotter::setJetRap       (JetCalib jc,,double rap                 ) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rap   , -1.   , false }; }
-void ClusterTreePlotter::setJetRap       (JetCalib jc,,double rapmin,double rapmax) { key_t key = { (unsigned int)jc, VarType::RAP }; m_selectByRap[key] = { rapmin, rapmax, false }; }
+void ClusterTreePlotter::setParticleEmin  (ParticleScale ps,double e                   ) { key_t key((uint_t)ps); m_selectors[key] = { ValueType::E  , e     , -1.   , false }; }
+void ClusterTreePlotter::setParticlePtmin (ParticleScale ps,double pt                  ) { key_t key((uint_t)ps); m_selectors[key] = { ValueType::PT , pt    , -1.   , false }; }
+void ClusterTreePlotter::setParticleAbsRap(ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors[key] = { ValueType::RAP, rap   , -1.   , true  }; }
+void ClusterTreePlotter::setParticleAbsRap(ParticleScale ps,double rapmin,double rapmax) { key_t key((uint_t)ps); m_selectors[key] = { ValueType::RAP, rap   , rapmax, true  }; }
+void ClusterTreePlotter::setParticleRap   (ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors[key] = { ValueType::RAP, rap   , -1.   , false }; }
+void ClusterTreePlotter::setParticleRap   (ParticleScale ps,double rapmin,double rapmax) { key_t key((uint_t)ps); m_selectors[key] = { ValueType::RAP, rapmin, rapmax, false }; }
 
-bool ClusterTreePlotter::select(ClusterCalib cc) {  ikey = cc; return select(ikey,m_selectByE) && select(ikey,m_selectByPt) && select(ikey,m_selectRap) 
+void ClusterTreePlotter::setClusterEmin  (ClusterScale cs,double e                   ) { key_t key((uint_t)cc); m_selectors[key] = { ValueType::E  , e     , -1.   , false }; }
+void ClusterTreePlotter::setClusterPtmin (ClusterScale cs,double pt                  ) { key_t key((uint_t)cc); m_selectors[key] = { ValueType::PT , pt    , -1.   , false }; }
+void ClusterTreePlotter::setClusterAbsRap(ClusterScale cs,double rap                 ) { key_t key((uint_t)cc); m_selectors[key] = { ValueType::RAP, rap   , -1.   , true  }; }
+void ClusterTreePlotter::setClusterAbsRap(ClusterScale cs,double rapmin,double rapmax) { key_t key((uint_t)cc); m_selectors[key] = { ValueType::RAP, rap   , rapmax, true  }; }
+void ClusterTreePlotter::setClusterRap   (ClusterScale cs,double rap                 ) { key_t key((uint_t)cc); m_selectors[key] = { ValueType::RAP, rap   , -1.   , false }; }
+void ClusterTreePlotter::setClusterRap   (ClusterScale cs,double rapmin,double rapmax) { key_t key((uint_t)cc); m_selectors[key] = { ValueType::RAP, rapmin, rapmax, false }; }
 
-bool ClusterTreePlotter::select(key_t key,const std::map<key_t,frange_t>& map) { 
-  auto fsep(map.find(key)); if ( fsep == map.end() ) { return true; }
-  double e(0.); 
-  switch (cc) {
-  case ClusterCalib::RAW: e = std::get<2>(fsep->second) ? std::abs(clusterE)      : clusterE     ; break;
-  case ClusterCalib::LCW: e = std::get<2>(fsep->second) ? std::abs(clusterECalib) : clusterECalib; break;
-  case ClusterCalib::ML:  e = std::get<2>(fsep->second) ? std::abs(CalibratedE)   : CalibratedE  ; break;
-  case JetCalib::RAW:     e = std::get<2>(fsep->second) ? std::abs(jetRawE)       : jetRawE      ; break;
-  case JetCalib::LCJES:   e = std::get<2>(fsep->second) ? std::abs(jetCalE)       : jetCalE      ; break;
-  default:                                                                                         break;
-  }
-  return std::get<1>(fsep->second) > std::get<0>(fsep->second) ? e > std::get<0>(fsep->second) && e < std::get<1>(fsep->second) : e > std::get<0>(fsep->second); 
+void ClusterTreePlotter::setJetEMin      (JetScale js,double e                   ) { key_t key((unit_t)js); m_selectors[key] = { ValueType::E  , e     , -1.   , false }; }
+void ClusterTreePlotter::setJetPtMin     (JetScale js,double pt                  ) { key_t key((unit_t)js); m_selectors[key] = { ValueType::PT , pt    , -1.   , false }; }
+void ClusterTreePlotter::setJetAbsRap    (JetScale js,double rap                 ) { key_t key((unit_t)js); m_selectors[key] = { ValueType::RAP, rap   , -1.   , true  }; }
+void ClusterTreePlotter::setJetAbsRap    (JetScale js,double rapmin,double rapmax) { key_t key((unit_t)js); m_selectors[key] = { ValueType::RAP, rap   , rapmax, true  }; }
+void ClusterTreePlotter::setJetRap       (JetScale js,double rap                 ) { key_t key((unit_t)js); m_selectors[key] = { ValueType::RAP, rap   , -1.   , false }; }
+void ClusterTreePlotter::setJetRap       (JetScale js,double rapmin,double rapmax) { key_t key((unit_t)js); m_selectors[key] = { ValueType::RAP, rapmin, rapmax, false }; }
+
+////////////////////////
+// Applying Selectors //
+////////////////////////
+
+// -- Clusters
+bool ClusterTreePlotter::filter(ClusterScale cs)  { return select((uint_t)cs); }
+// -- Jets					    		           
+bool ClusterTreePlotter::filter(JetScale js)      { return select((uint_t)js); }
+// -- Particles					    		           
+bool ClusterTreePlotter::filter(ParticleScale ps) { return select((uint_t)ps); }
+// -- Filter function 
+bool ClusterTreePlotter::select(uint_t key) {
+  // find variable to filter - if not found, no filter is applied
+  auto fvar = m_selectors.lower_bound(key); if ( fvar == m_selectors.end() ) { return true; }
+  // check with value map is needed
+  const std::map<vkey_t,vptr_t>& map = isCluster(key) ? m_accessCluster : isJet(key) ? m_accessJet : isParticle(key) ? m_accessParticle : m_accessEmpty;  
+  // loop all variables
+  bool accept(true); 
+  while ( fvar != m_selectors.upper_bound(key) && accept ) {
+    vkey_t vkey = { std::get<0>(fvar->second), key }; 
+    auto fvalue(map.find(vkey)); 
+    if ( fvalue != map.end() ) { 
+      double value = std::get<3>(fvar->second) ? static_cast<double>(std::abs(*(fvalue->second))) : static_cast<double>(*(fvalue->second)); 
+      accept = std::get<2>(fvar->second) > std::get<1>(fvar->second) ? value > std::get<1>(fvar->second) && value < std::get<2>(fvar->second) : value > std::get<1>(fvar->second);
+    }
+    ++fvar;
+  } 
+  return accept;
 }
+
+///////////////////
+// Access values //
+///////////////////
+
+double ClusterTreePlotter::value(ValueType vtype,uint_t vscale) {
+  if ( isParticle(vscale) ) { 
+  }
+}
+
+
+
+ 
+//   auto fsep(map.find(key)); if ( fsep == map.end() ) { return true; }
+//   double e(0.); 
+//   switch (cc) {
+//   case ClusterCalib::RAW: e = std::get<2>(fsep->second) ? std::abs(clusterE)      : clusterE     ; break;
+//   case ClusterCalib::LCW: e = std::get<2>(fsep->second) ? std::abs(clusterECalib) : clusterECalib; break;
+//   case ClusterCalib::ML:  e = std::get<2>(fsep->second) ? std::abs(CalibratedE)   : CalibratedE  ; break;
+//   case JetCalib::RAW:     e = std::get<2>(fsep->second) ? std::abs(jetRawE)       : jetRawE      ; break;
+//   case JetCalib::LCJES:   e = std::get<2>(fsep->second) ? std::abs(jetCalE)       : jetCalE      ; break;
+//   default:                                                                                         break;
+//   }
+//   return std::get<1>(fsep->second) > std::get<0>(fsep->second) ? e > std::get<0>(fsep->second) && e < std::get<1>(fsep->second) : e > std::get<0>(fsep->second); 
+// }
 
 void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
 {
@@ -79,13 +133,37 @@ void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
    
    printf("[ClusterTreePionPlotter::Loop()] INFO [%lli] calculated energy binning (%zu bins)\n",nentries,logEbins.size()-1); 
 
+   // -- particle quantities
+   TH1D* h_part_e_all   = Hist::book<TH1D>("PartEAll"  ,"Particle energy (all particles)"   ,logEbins     ,"E_{part} [GeV]","entries/GeV");
+   TH1D* h_part_e_pi0   = Hist::book<TH1D>("PartEPi0"  ,"Particle energy (#pi^{0})"         ,logEbins     ,"E_{part} [GeV]","entries/GeV");
+   TH1D* h_part_e_pic   = Hist::book<TH1D>("PartEPiC"  ,"Particle energy (#pi^{#pm})"       ,logEbins     ,"E_{part} [GeV]","entries/GeV");
+   TH1D* h_part_rap_all = Hist::book<TH1D>("PartRapAll","Particle rapidity (all particles)",99,-4.95,4.95,"y_{part}"      ,"entries/0.1");
+   TH1D* h_part_rap_pi0 = Hist::book<TH1D>("PartRapPi0","Particle rapidity (#pi^{0})"      ,99,-4.95,4.95,"y_{part}"      ,"entries/0.1");
+   TH1D* h_part_rap_pic = Hist::book<TH1D>("PartRapPiC","Particle rapidity (#pi^{#pm})"    ,99,-4.95,4.95,"y_{part}"      ,"entries/0.1");
+
+   // -- jet quantities
+   TH1D* h_jet_cale_incl     = Hist::book<TH1D>("JetECalIncl"    ,"Calibrated jet energy (inclusive)"  ,logEbins     ,"E_{jet}^{LCJES} [GeV]"  ,"entries/GeV" );
+   TH1D* h_jet_calpt_incl    = Hist::book<TH1D>("JetPtCalIncl"   ,"Calibrated jet p_{T} (inclusive)"   ,logEbins     ,"p_{T,jet}^{LCJES} [GeV]","entries/GeV" );
+   TH1D* h_jet_calrap_incl   = Hist::book<TH1D>("JetRapCalIncl"  ,"Calibrated jet rapidity (inclusive)",99,-4.95,4.95,"y_{jet}^{LCJES}"        ,"entries/0.1" );
+   TH1D* h_jet_cale_excl     = Hist::book<TH1D>("JetECalExcl"    ,"Calibrated jet energy (exclusive)"  ,logEbins     ,"E_{jet}^{LCJES} [GeV]"  ,"entries/GeV" );
+   TH1D* h_jet_calpt_excl    = Hist::book<TH1D>("JetPtCalExcl"   ,"Calibrated jet p_{T} (exclusive)"   ,logEbins     ,"p_{T,jet}^{LCJES} [GeV]","entries/GeV" );
+   TH1D* h_jet_calrap_excl   = Hist::book<TH1D>("JetRapCalExcl"  ,"Calibrated jet rapidity (exclusive)",99,-4.95,4.95,"y_{jet}^{LCJES}"        ,"entries/0.1" );
+   TH1D* h_jet_truthe_incl   = Hist::book<TH1D>("JetETruthIncl"  ,"Truth jet energy (inclusive)"       ,logEbins     ,"E_{jet}^{truth} [GeV]"  ,"entries/GeV" );
+   TH1D* h_jet_truthpt_incl  = Hist::book<TH1D>("JetPtTruthIncl" ,"Truth jet p_{T} (inclusive)"        ,logEbins     ,"p_{T,jet}^{truth} [GeV]","entries/GeV" );
+   TH1D* h_jet_truthrap_incl = Hist::book<TH1D>("JetRapTruthIncl","Truth jet rapidity (inclusive)"     ,99,-4.95,4.95,"y_{jet}^{truth}"        ,"entries/0.1" );
+   TH1D* h_jet_truthdR_incl  = Hist::book<TH1D>("JetdRTruthIncl", "Truth jet #Delta R (inclusive)"     ,100,0.,1.    ,"#Delta R"               ,"entries/0.01");
+   TH1D* h_jet_truthe_excl   = Hist::book<TH1D>("JetETruthExcl"  ,"Truth jet energy (exclusive)"       ,logEbins     ,"E_{jet}^{truth} [GeV]"  ,"entries/GeV" );
+   TH1D* h_jet_truthpt_excl  = Hist::book<TH1D>("JetPtTruthExcl" ,"Truth jet p_{T} (exclusive)"        ,logEbins     ,"p_{T,jet}^{truth} [GeV]","entries/GeV" );
+   TH1D* h_jet_truthrap_excl = Hist::book<TH1D>("JetRapTruthExcl","Truth jet rapidity (exclusive)"     ,99,-4.95,4.95,"y_{jet}^{truth}"        ,"entries/0.1" );
+   TH1D* h_jet_truthdR_excl  = Hist::book<TH1D>("JetdRTruthExcl", "Truth jet #Delta R (exclusive)"     ,100,0.,1.    ,"#Delta R"               ,"entries/0.01");
+
    // -- cluster quantities
    TH1D* h_clus_rap_all = Hist::book<TH1D>("ClusRapAll","Cluster rapidity (all clusters)"     ,99,-4.95,4.95,"y_{clus}","entries/0.1");
    TH1D* h_clus_rap_acc = Hist::book<TH1D>("ClusRapAcc","Cluster rapidity (accepted clusters)",99,-4.95,4.95,"y_{clus}","entries/0.1");
    TH1D* h_clus_dep_all = Hist::book<TH1D>("ClusDepAll","Cluster Edep (all clusters)"     ,logEbins,"E_{clus}^{dep} [GeV]","entries/GeV");
    TH1D* h_clus_dep_acc = Hist::book<TH1D>("ClusDepAcc","Cluster Edep (accepted clusters)",logEbins,"E_{clus}^{dep} [GeV]","entries/GeV");
    TH1D* h_clus_eem_all = Hist::book<TH1D>("ClusEemAll","Cluster Eem (all clusters)"     ,logEbins,"E_{clus}^{em} [GeV]","entries/GeV");
-   TH1D* h_clus_eem_acc = Hist::book<TH1D>("ClusEemAcc","Cluster Eem (accepted clusters)",logEbins,"E_{clus}^{em} [GeV]","entries/GeV");
+   TH1D* h_clus_eem_acc = Hist::book<TH1D>("ClusEemAcc","Cluster Eem (accepted clusters)",logEbins,"E_{clus}^{em} [GeV]","entries/GeV"); 
    TH1D* h_clus_lcw_all = Hist::book<TH1D>("ClusLcwAll","Cluster Elcw (all clusters)"     ,logEbins,"E_{clus}^{had} [GeV]","entries/GeV");
    TH1D* h_clus_lcw_acc = Hist::book<TH1D>("ClusLcwAcc","Cluster Elcw (accepted clusters)",logEbins,"E_{clus}^{had} [GeV]","entries/GeV");
    TH1D* h_clus_eml_all = Hist::book<TH1D>("ClusEmlAll","Cluster Eml (all clusters)"     ,logEbins,"E_{clus}^{ml} [GeV]","entries/GeV");
@@ -162,12 +240,38 @@ void ClusterTreePionPlotter::Loop(double pdgID,bool absVal)
       Long64_t ientry = LoadTree(jentry); if (ientry < 0) break;
       fChain->GetEntry(jentry); 
       // particle selection
-      double ppdg = absVal ? std::abs(truthPDG) : truthPDG; 
-      if ( pdgID != 0 && ppdg != pdgID ) { continue; }
+      // double ppdg = absVal ? std::abs(truthPDG) : truthPDG; 
+      // if ( pdgID != 0 && ppdg != pdgID ) { continue; }
+      // kentry++;
+      if ( newObject() ) {
+	if ( isParticle() ) { 
+	  h_part_e_all  ->Fill(truthE  );
+	  h_part_rap_all->Fill(truthEta);
+	}
+	if ( isJet() ) {
+   h_jet_cale_incl     = Hist::book<TH1D>("JetECalIncl"    ,"Calibrated jet energy (inclusive)"  ,logEbins     ,"E_{jet}^{LCJES} [GeV]"  ,"entries/GeV");
+   h_jet_calpt_incl    = Hist::book<TH1D>("JetPtCalIncl"   ,"Calibrated jet p_{T} (inclusive)"   ,logEbins     ,"p_{T,jet}^{LCJES} [GeV]","entries/GeV");
+   h_jet_calrap_incl   = Hist::book<TH1D>("JetRapCalIncl"  ,"Calibrated jet rapidity (inclusive)",99,-4.95,4.95,"y_{jet}^{LCJES}"        ,"entries/0.1");
+   TH1D* h_jet_cale_excl     = Hist::book<TH1D>("JetECalExcl"    ,"Calibrated jet energy (exclusive)"  ,logEbins     ,"E_{jet}^{LCJES} [GeV]"  ,"entries/GeV");
+   TH1D* h_jet_calpt_excl    = Hist::book<TH1D>("JetPtCalExcl"   ,"Calibrated jet p_{T} (exclusive)"   ,logEbins     ,"p_{T,jet}^{LCJES} [GeV]","entries/GeV");
+   TH1D* h_jet_calrap_excl   = Hist::book<TH1D>("JetRapCalExcl"  ,"Calibrated jet rapidity (exclusive)",99,-4.95,4.95,"y_{jet}^{LCJES}"        ,"entries/0.1");
+   TH1D* h_jet_truthe_excl   = Hist::book<TH1D>("JetETruthExcl"  ,"Truth jet energy (exclusive)"       ,logEbins     ,"E_{jet}^{truth} [GeV]"  ,"entries/GeV");
+   TH1D* h_jet_truthpt_excl  = Hist::book<TH1D>("JetPtTruthExcl" ,"Truth jet p_{T} (exclusive)"        ,logEbins     ,"p_{T,jet}^{truth} [GeV]","entries/GeV");
+   TH1D* h_jet_truthrap_excl = Hist::book<TH1D>("JetRapTruthExcl","Truth jet rapidity (exclusive)"     ,99,-4.95,4.95,"y_{jet}^{truth}"        ,"entries/0.1");
+ 
+	}
+      }
+      // cluster selection by particle or jet
+      if ( !filter(ParticleScale::TRUTH) || !filter(JetScale::LCJES) ) { continue; } 
       kentry++;
-      // cluster selection
-      double edep(cluster_ENG_CALIB_TOT); double eta(clusterEta); double signif(cluster_SIGNIFICANCE); 
-      if ( edep <= 0. || std::abs(eta) > 0.8 || signif < 0. ) { continue; }
+   h_part_e_pi0   = Hist::book<TH1D>("PartEPi0"  ,"Particle energy (#pi^{0})"         ,logEbins     ,"E_{part} [GeV]","entries/GeV");
+   h_part_e_pic   = Hist::book<TH1D>("PartEPiC"  ,"Particle energy (#pi^{#pm})"       ,logEbins     ,"E_{part} [GeV]","entries/GeV");
+   h_part_rap_pi0 = Hist::book<TH1D>("PartRapPi0","Particle rapidity (#pi^{0})"      ,99,-4.95,4.95,"y_{part}"      ,"entries/0.1");
+   h_part_rap_pic = Hist::book<TH1D>("PartRapPiC","Particle rapidity (#pi^{#pm})"    ,99,-4.95,4.95,"y_{part}"      ,"entries/0.1");
+      // cluster selection by cluster
+      if ( !filter(ClusterScale::TRUTH) || !filter(ClusterScale::LCW) ) { continue; }
+      //      double edep(cluster_ENG_CALIB_TOT); double eta(clusterEta); double signif(cluster_SIGNIFICANCE); 
+      //      if ( edep <= 0. || std::abs(eta) > 0.8 || signif < 0. ) { continue; }
       lentry++;
       // collect signals
       double eem (clusterE); 
