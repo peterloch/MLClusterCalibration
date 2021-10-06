@@ -23,13 +23,23 @@
 #include <tuple>
 #include <string>
 
+#include <iostream>
+
 #include <cstdio>
 #include <cmath>
+
+namespace Mask {
+  static const unsigned int cluster  = { 0x100 };
+  static const unsigned int jet      = { 0x200 }; 
+  static const unsigned int particle = { 0x400 };
+}
 
 // Header file for the classes stored in the TTree if any.
 
 class ClusterTreePlotter {
 public :
+  typedef unsigned int uint_t;
+
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
    Int_t           fCurrent; //!current Tree number in a TChain
 
@@ -231,32 +241,66 @@ public :
 
   virtual void     binNormalize(TH1* h); 
 
-  enum class ClusterScale { RAW=0x11, LCW  =0x12, TRUTH=0x14, ML =0x18, UNKNOWN=0x00 }; // cluster scales
-  enum class JetScale     { RAW=0x21, LCJES=0x22, TRUTH=0x24,           UNKNOWN=0x00 }; // jet scale
-  enum class ParticleScale{                       TRUTH=0x44,           UNKNOWN=0x00 }; // particle scale
+  enum class ClusterScale { RAW=0x001|Mask::cluster, LCW  =0x002|Mask::cluster, TRUTH=0x004|Mask::cluster , ML =0x108|Mask::cluster, UNKNOWN=0x000|Mask::cluster  }; // cluster scales
+  enum class JetScale     { RAW=0x001|Mask::jet    , LCJES=0x002|Mask::jet    , TRUTH=0x004|Mask::jet     ,                          UNKNOWN=0x000|Mask::jet      }; // jet scale
+  enum class ParticleScale{                                                     TRUTH=0x004|Mask::particle,                          UNKNOWN=0x000|Mask::particle }; // particle scale
 
   enum class ValueType    { E=0x01, PT=0x02, RAP=0x04, PDG=0x08, UNKNOWN=0x00 }; // value type
 
-  void setParticleEmin  (ParticleScale ps,double e                   );
-  void setParticlePtmin (ParticleScale ps,double pt                  );
-  void setParticleAbsRap(ParticleScale ps,double rap                 );
-  void setParticleAbsRap(ParticleScale ps,double rapmin,double rapmax);
-  void setParticleRap   (ParticleScale ps,double rap                 );
-  void setParticleRap   (ParticleScale ps,double rapmin,double rapmax);
+protected:
+  const std::map<uint_t,std::string> m_scaleDict = {
+    { (uint_t)ClusterScale::RAW     , "ClusterScale::RAW"     },
+    { (uint_t)ClusterScale::LCW     , "ClusterScale::LCW"     },
+    { (uint_t)ClusterScale::TRUTH   , "ClusterScale::TRUTH"   },
+    { (uint_t)ClusterScale::ML      , "ClusterScale::ML"      },
+    { (uint_t)ClusterScale::UNKNOWN , "ClusterScale::UNKNOWN" },
+    { (uint_t)JetScale::RAW         , "JetScale::RAW"         },
+    { (uint_t)JetScale::LCJES       , "JetScale::LCJES"       },
+    { (uint_t)JetScale::TRUTH       , "JetScale::TRUTH"       },
+    { (uint_t)JetScale::UNKNOWN     , "JetScale::UNKNOWN"     },
+    { (uint_t)ParticleScale::TRUTH  , "ParticleScale::TRUTH"  },
+    { (uint_t)ParticleScale::UNKNOWN, "ParticleScale::UNKNOWN"}
+  };
+  const std::string m_unknownScale = { "UnknownScale::UNKNOWN" };
+  const std::map<ValueType,std::string> m_valueDict = {
+    { ValueType::E      , "ValueType::E"       },
+    { ValueType::PT     , "ValueType::PT"      },
+    { ValueType::RAP    , "ValueType::RAP"     },
+    { ValueType::PDG    , "ValueType::PDG"     },
+    { ValueType::UNKNOWN, "ValueType::UNKNOWN" }
+  };
+public:
+  const std::string& objectScale(uint_t   rs ) const { auto fscale(m_scaleDict.find(rs)); return fscale != m_scaleDict.end() ? fscale->second : m_unknownScale; } 
+  const std::string& valueType  (ValueType vt) const { return m_valueDict.at(vt); } 
 
-  void setClusterEmin  (ClusterScale cs,double e                   );
-  void setClusterPtmin (ClusterScale cs,double pt                  );
-  void setClusterAbsRap(ClusterScale cs,double rap                 );
-  void setClusterAbsRap(ClusterScale cs,double rapmin,double rapmax);
-  void setClusterRap   (ClusterScale cs,double rap                 ); 
-  void setClusterRap   (ClusterScale cs,double rapmin,double rapmax);
+  void setParticleEmin     (ParticleScale ps,double e                   );
+  void setParticlePtmin    (ParticleScale ps,double pt                  );
+  void setParticleAbsRapMin(ParticleScale ps,double rap                 );
+  void setParticleAbsRapMax(ParticleScale ps,double rap                 );
+  void setParticleAbsRap   (ParticleScale ps,double rapmin,double rapmax);
+  void setParticleRapMin   (ParticleScale ps,double rap                 );
+  void setParticleRapMax   (ParticleScale ps,double rap                 );
+  void setParticleRap      (ParticleScale ps,double rapmin,double rapmax);
 
-  void setJetEMin  (JetScale js,double e                   ); 
-  void setJetPtMin (JetScale js,double pt                  ); 
-  void setJetAbsRap(JetScale js,double rap                 );
-  void setJetAbsRap(JetScale js,double rapmin,double rapmax);
-  void setJetRap   (JetScale js,double rap                 );
-  void setJetRap   (JetScale js,double rapmin,double rapmax);
+  void setClusterEmin     (ClusterScale cs,double e                   );
+  void setClusterPtmin    (ClusterScale cs,double pt                  );
+  void setClusterAbsRapMin(ClusterScale cs,double rap                 );
+  void setClusterAbsRapMax(ClusterScale cs,double rap                 );
+  void setClusterAbsRap   (ClusterScale cs,double rapmin,double rapmax);
+  void setClusterRapMin   (ClusterScale cs,double rap                 ); 
+  void setClusterRapMax   (ClusterScale cs,double rap                 ); 
+  void setClusterRap      (ClusterScale cs,double rapmin,double rapmax);
+
+  void setJetEMin     (JetScale js,double e                   ); 
+  void setJetPtMin    (JetScale js,double pt                  ); 
+  void setJetAbsRapMin(JetScale js,double rap                 );
+  void setJetAbsRapMax(JetScale js,double rap                 );
+  void setJetAbsRap   (JetScale js,double rapmin,double rapmax);
+  void setJetRapMin   (JetScale js,double rap                 );
+  void setJetRapMax   (JetScale js,double rap                 );
+  void setJetRap      (JetScale js,double rapmin,double rapmax);
+
+  std::ostream& printContent(std::ostream& os) const;
 
 private:
 
@@ -272,16 +316,21 @@ private:
   double m_jetPt = { 0. };
 
   // selections
-  typedef unsigned int                               uint_t;
-  typedef uint_t                                     key_t;
-  typedef std::tuple<ValueType,Float_t,Float_t,bool> frange_t;
-  std::multimap<key_t,frange_t>                      m_selectors;
+  typedef uint_t                                                 key_t;
+  //                     +-----------------------------------------------< [0] value type used in filter 
+  //                     |        +--------------------------------------< [1] min(value)      
+  //                     |        |       +------------------------------< [2] max(value)
+  //                     |        |       |      +-----------------------< [3] true if abs(value) should be used
+  //                     |        |       |      |       +---------------< [4] operator in filter: ">", "<", "==", "!=" "<>"
+  //                     |        |       |      |       |
+  typedef std::tuple<ValueType,Float_t,Float_t,bool,std::string> frange_t;
+  std::multimap<key_t,frange_t>                                  m_selectors;
 
   // accessors
   typedef std::tuple<ValueType,uint_t> vkey_t;
   typedef Float_t*                     vptr_t;
   typedef std::map<vkey_t,vptr_t>      vmap_t;
-  vmap_t m_accessCluster = { 
+  vmap_t m_accessValues = { 
     { { ValueType::E,   (uint_t)ClusterScale::RAW   }, &clusterE              },
     { { ValueType::E,   (uint_t)ClusterScale::LCW   }, &clusterECalib         },
     { { ValueType::E,   (uint_t)ClusterScale::ML    }, &CalibratedE           },
@@ -289,9 +338,9 @@ private:
     { { ValueType::PT,  (uint_t)ClusterScale::RAW   }, &clusterPt             },
     { { ValueType::PT,  (uint_t)ClusterScale::LCW   }, &clusterPtCalib        },
     { { ValueType::RAP, (uint_t)ClusterScale::RAW   }, &clusterEta            },
-    { { ValueType::RAP, (uint_t)ClusterScale::LCW   }, &clusterEtaCalib       }
-  };
-  vmap_t m_accessJet = { 
+    { { ValueType::RAP, (uint_t)ClusterScale::LCW   }, &clusterEtaCalib       },
+  // };
+  // vmap_t m_accessJet = { 
     { { ValueType::E,   (uint_t)JetScale::RAW   }, &jetRawE    },
     { { ValueType::E,   (uint_t)JetScale::LCJES }, &jetCalE    },
     { { ValueType::E,   (uint_t)JetScale::TRUTH }, &truthJetE  },
@@ -300,9 +349,9 @@ private:
     { { ValueType::PT,  (uint_t)JetScale::TRUTH }, &truthJetPt },
     { { ValueType::RAP, (uint_t)JetScale::RAW   }, &jetRawEta  },
     { { ValueType::RAP, (uint_t)JetScale::LCJES }, &jetCalEta  },
-    { { ValueType::RAP, (uint_t)JetScale::TRUTH }, &truthJetEta}
-  };
-  vmap_t m_accessParticle = { 
+    { { ValueType::RAP, (uint_t)JetScale::TRUTH }, &truthJetEta},
+  // };
+  // vmap_t m_accessParticle = { 
     { { ValueType::E,   (uint_t)ParticleScale::TRUTH }, &truthE  },
     { { ValueType::PT,  (uint_t)ParticleScale::TRUTH }, &truthPt },
     { { ValueType::RAP, (uint_t)ParticleScale::TRUTH }, &truthEta},
@@ -311,16 +360,17 @@ private:
   const vmap_t m_accessEmpty;
 
   // helpers
-  template<class T> bool isClusterKey (T key) { return ( key & 0x10 ) == 0x10; }
-  template<class T> bool isJetKey     (T key) { return ( key & 0x20 ) == 0x20; }
-  template<class T> bool isParticleKey(T key) { return ( key & 0x40 ) == 0x40; } 
+  template<class T> bool isClusterKey (T key) { return ( key & Mask::cluster  ) == Mask::cluster ; }
+  template<class T> bool isJetKey     (T key) { return ( key & Mask::jet      ) == Mask::jet     ; }
+  template<class T> bool isParticleKey(T key) { return ( key & Mask::particle ) == Mask::particle; } 
   template<class T> bool fillValue(ValueType vtype,uint_t vscale,T& val) {
-    const auto& vmap = 
-      isParticleKey<uint_t>(vscale)  ? m_accessParticle 
-      : isJetKey<uint_t>(vscale)     ? m_accessJet 
-      : isClusterKey<uint_t>(vscale) ? m_accessCluster
-      : m_accessEmpty; 
-    auto fval(vmap.find({vtype,vscale})); if ( fval != vmap.end() ) { val = (T)*(fval->second); return true; } else { return false; }
+    // const auto& vmap = 
+    //   isParticleKey<uint_t>(vscale)  ? m_accessParticle 
+    //   : isJetKey<uint_t>(vscale)     ? m_accessJet 
+    //   : isClusterKey<uint_t>(vscale) ? m_accessCluster
+    //   : m_accessEmpty; 
+    // auto fval(vmap.find({vtype,vscale})); if ( fval != vmap.end() ) { val = (T)*(fval->second); return true; } else { return false; }
+    auto fval(m_accessValues.find({vtype,vscale})); if ( fval != m_accessValues.end() ) { val = (T)*(fval->second); return true; } else { return false; }
   }
 
   bool isParticle();
@@ -335,6 +385,7 @@ private:
   Float_t m_truthJetEta = { 0. };
 
 protected:
+
   virtual bool hasBookedLeaf(const std::string& lname);
 
   virtual bool filter(ClusterScale  cs); 
@@ -347,6 +398,11 @@ protected:
 
   virtual bool fillParticle(bool final=false);
   virtual bool fillJet     (bool final=false); 
+
+  template<class T> bool aboveThreshold(T value,T vthr)         { return value > vthr;                 }
+  template<class T> bool belowThreshold(T value,T vthr)         { return value < vthr;                 }
+  template<class T> bool withinRange   (T value,T vmin, T vmax) { return value > vmin && value < vmax; }
+  template<class T> bool equalTo       (T value,T veqv)         { return value == veqv;                } 
 
 private:
 
@@ -621,8 +677,8 @@ Bool_t ClusterTreePlotter::Notify()
    // is started when using PROOF. It is normally not necessary to make changes
    // to the generated code, but the routine can be extended by the
    // user if needed. The return value is currently not used.
-  std::string kana = m_listOfLeaves.find("jetCalPt") != m_listOfLeaves.end() ? "jet" : "single particle";
-  printf("[ClusterTreePlotter::Init()] INFO booked %zu branches for %s analysis\n",m_listOfLeaves.size(),kana.c_str());
+  std::string kana = m_isJet ? "jet" : "single particle";
+  printf("[ClusterTreePlotter::Init()] INFO booked %zu plots for %s analysis\n",m_listOfLeaves.size(),kana.c_str());
   return kTRUE;
 }
 
@@ -640,4 +696,6 @@ Int_t ClusterTreePlotter::Cut(Long64_t entry)
 // returns -1 otherwise.
    return 1;
 }
+
+std::ostream& operator<<(std::ostream& ostr,const ClusterTreePlotter& plotter) { return plotter.printContent(ostr); } 
 #endif // #ifdef ClusterTreePlotter_cxx

@@ -8,6 +8,10 @@
 #include <vector>
 #include <cmath>
 
+#include <sstream>
+
+#include <iomanip>
+
 /////////////////////
 // Production mode //
 /////////////////////
@@ -20,26 +24,32 @@ bool ClusterTreePlotter::isParticle()                            { return m_isPa
 // Setting Selectors //
 ///////////////////////
 
-void ClusterTreePlotter::setParticleEmin  (ParticleScale ps,double e                   ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::E  ,e     ,-1.   ,false}}); }
-void ClusterTreePlotter::setParticlePtmin (ParticleScale ps,double pt                  ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::PT ,pt    ,-1.   ,false}}); }
-void ClusterTreePlotter::setParticleAbsRap(ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true }}); }
-void ClusterTreePlotter::setParticleAbsRap(ParticleScale ps,double rapmin,double rapmax) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,true }}); }
-void ClusterTreePlotter::setParticleRap   (ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false}}); }
-void ClusterTreePlotter::setParticleRap   (ParticleScale ps,double rapmin,double rapmax) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,false}}); }
+void ClusterTreePlotter::setParticleEmin     (ParticleScale ps,double e                   ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::E  ,e     ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setParticlePtmin    (ParticleScale ps,double pt                  ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::PT ,pt    ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setParticleAbsRapMin(ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true ,">" }}); }
+void ClusterTreePlotter::setParticleAbsRapMax(ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true ,"<" }}); }
+void ClusterTreePlotter::setParticleAbsRap   (ParticleScale ps,double rapmin,double rapmax) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,true ,"<>"}}); }
+void ClusterTreePlotter::setParticleRapMin   (ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setParticleRapMax   (ParticleScale ps,double rap                 ) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false,"<" }}); }
+void ClusterTreePlotter::setParticleRap      (ParticleScale ps,double rapmin,double rapmax) { key_t key((uint_t)ps); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,false,"<>"}}); }
 
-void ClusterTreePlotter::setClusterEmin  (ClusterScale cs,double e                   ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::E  ,e     ,-1.   ,false}}); }
-void ClusterTreePlotter::setClusterPtmin (ClusterScale cs,double pt                  ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::PT ,pt    ,-1.   ,false}}); }
-void ClusterTreePlotter::setClusterAbsRap(ClusterScale cs,double rap                 ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true }}); }
-void ClusterTreePlotter::setClusterAbsRap(ClusterScale cs,double rapmin,double rapmax) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,true }}); }
-void ClusterTreePlotter::setClusterRap   (ClusterScale cs,double rap                 ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false}}); }
-void ClusterTreePlotter::setClusterRap   (ClusterScale cs,double rapmin,double rapmax) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,false}}); }
+void ClusterTreePlotter::setClusterEmin     (ClusterScale cs,double e                   ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::E  ,e     ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setClusterPtmin    (ClusterScale cs,double pt                  ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::PT ,pt    ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setClusterAbsRapMin(ClusterScale cs,double rap                 ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true ,">" }}); }
+void ClusterTreePlotter::setClusterAbsRapMax(ClusterScale cs,double rap                 ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true ,"<" }}); }
+void ClusterTreePlotter::setClusterAbsRap   (ClusterScale cs,double rapmin,double rapmax) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,true ,"<>"}}); }
+void ClusterTreePlotter::setClusterRapMin   (ClusterScale cs,double rap                 ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setClusterRapMax   (ClusterScale cs,double rap                 ) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false,"<" }}); }
+void ClusterTreePlotter::setClusterRap      (ClusterScale cs,double rapmin,double rapmax) { key_t key((uint_t)cs); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,false,"<>"}}); }
 
-void ClusterTreePlotter::setJetEMin      (JetScale js,double e                   ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::E  ,e     ,-1.   ,false}}); }
-void ClusterTreePlotter::setJetPtMin     (JetScale js,double pt                  ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::PT ,pt    ,-1.   ,false}}); }
-void ClusterTreePlotter::setJetAbsRap    (JetScale js,double rap                 ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true }}); }
-void ClusterTreePlotter::setJetAbsRap    (JetScale js,double rapmin,double rapmax) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,true }}); }
-void ClusterTreePlotter::setJetRap       (JetScale js,double rap                 ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false}}); }
-void ClusterTreePlotter::setJetRap       (JetScale js,double rapmin,double rapmax) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,false}}); }
+void ClusterTreePlotter::setJetEMin     (JetScale js,double e                   ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::E  ,e     ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setJetPtMin    (JetScale js,double pt                  ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::PT ,pt    ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setJetAbsRapMin(JetScale js,double rap                 ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true ,">" }}); }
+void ClusterTreePlotter::setJetAbsRapMax(JetScale js,double rap                 ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,true ,"<" }}); }
+void ClusterTreePlotter::setJetAbsRap   (JetScale js,double rapmin,double rapmax) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,true ,"<>"}}); }
+void ClusterTreePlotter::setJetRapMin   (JetScale js,double rap                 ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false,">" }}); }
+void ClusterTreePlotter::setJetRapMax   (JetScale js,double rap                 ) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rap   ,-1.   ,false,"<" }}); }
+void ClusterTreePlotter::setJetRap      (JetScale js,double rapmin,double rapmax) { key_t key((uint_t)js); m_selectors.insert({key,{ValueType::RAP,rapmin,rapmax,false,"<>"}}); }
 
 ////////////////////////
 // Applying Selectors //
@@ -48,28 +58,76 @@ void ClusterTreePlotter::setJetRap       (JetScale js,double rapmin,double rapma
 // -- Clusters
 bool ClusterTreePlotter::filter(ClusterScale cs)  { return select((uint_t)cs); }
 // -- Jets					    		           
-bool ClusterTreePlotter::filter(JetScale js)      { return !isJet()      || select((uint_t)js); }
+bool ClusterTreePlotter::filter(JetScale js)      { return isJet()      ? select((uint_t)js) : true; }
 // -- Particles					    		           
-bool ClusterTreePlotter::filter(ParticleScale ps) { return !isParticle() || select((uint_t)ps); }
+bool ClusterTreePlotter::filter(ParticleScale ps) { return isParticle() ? select((uint_t)ps) : true; }
 // -- Filter function 
 bool ClusterTreePlotter::select(uint_t key) {
   // find variable to filter - if not found, no filter is applied
+  //  std::cout << "**** entered select with key " << objectScale(key) << std::endl;
   auto fvar = m_selectors.lower_bound(key); if ( fvar == m_selectors.end() ) { return true; }
   // check with value map is needed
-  const auto& map = isClusterKey<uint_t>(key) ? m_accessCluster : isJetKey<uint_t>(key) ? m_accessJet : isParticleKey<uint_t>(key) ? m_accessParticle : m_accessEmpty;
-  if ( map.empty() ) { return true; }   
+  // const auto& map = isClusterKey<uint_t>(key) ? m_accessCluster : isJetKey<uint_t>(key) ? m_accessJet : isParticleKey<uint_t>(key) ? m_accessParticle : m_accessEmpty;
+  // if ( map.empty() ) { return true; }   
   // loop all variables
   bool accept(true); 
   while ( fvar != m_selectors.upper_bound(key) && accept ) {
     vkey_t vkey = { std::get<0>(fvar->second), key }; 
-    auto fvalue(map.find(vkey)); 
-    if ( fvalue != map.end() ) { 
-      double value = std::get<3>(fvar->second) ? static_cast<double>(std::abs(*(fvalue->second))) : static_cast<double>(*(fvalue->second)); 
-      accept = std::get<2>(fvar->second) > std::get<1>(fvar->second) ? value > std::get<1>(fvar->second) && value < std::get<2>(fvar->second) : value > std::get<1>(fvar->second);
+    // auto fvalue(map.find(vkey)); 
+    // if ( fvalue != map.end() ) { 
+    auto fvalue(m_accessValues.find(vkey)); 
+    if ( fvalue != m_accessValues.end() ) { 
+      // get (abs) value 
+      double value = std::get<3>(fvar->second) ? std::abs(static_cast<double>(*(fvalue->second))) : static_cast<double>(*(fvalue->second)); 
+      // check operator
+      if      ( std::get<4>(fvar->second) == ">"  ) { accept = aboveThreshold<double>(value,std::get<1>(fvar->second))                          ; }
+      else if ( std::get<4>(fvar->second) == "<"  ) { accept = belowThreshold<double>(value,std::get<1>(fvar->second))                          ; } 
+      else if ( std::get<4>(fvar->second) == "<>" ) { accept = withinRange   <double>(value,std::get<1>(fvar->second),std::get<2>(fvar->second)); }
+      else if ( std::get<4>(fvar->second) == "==" ) { accept = equalTo       <double>(value,std::get<1>(fvar->second))                          ; }
+      else if ( std::get<4>(fvar->second) == "!=" ) { accept = !equalTo      <double>(value,std::get<1>(fvar->second))                          ; }
+      //      accept = std::get<2>(fvar->second) > std::get<1>(fvar->second) ? value > std::get<1>(fvar->second) && value < std::get<2>(fvar->second) : value > std::get<1>(fvar->second);
     }
     ++fvar;
   } 
   return accept;
+}
+
+// -- print selectors
+std::ostream& ClusterTreePlotter::printContent(std::ostream& ostr) const {
+  static const std::vector<std::string> _colTitles = { "Scale", "Value", "Filter" };
+  static char _buffer[1024];
+  int nls((int)_colTitles.at(0).length()); int nlw((int)_colTitles.at(1).length()); int nlf((int)_colTitles.at(2).length()); 
+  std::vector<std::string> filters;
+  for ( auto fsel : m_selectors ) { 
+    // column width 
+    nls = std::max(nls,(int)objectScale(fsel.first).length()            );
+    nlw = std::max(nlw,(int)valueType(std::get<0>(fsel.second)).length());
+    // filters
+    double vmin(std::get<1>(fsel.second)); double vmax(std::get<2>(fsel.second)); bool isAbs(std::get<3>(fsel.second)); const std::string& opstr(std::get<4>(fsel.second));
+    std::ostringstream sstr; 
+    if ( opstr != "<>"  ) { 
+      if ( isAbs ) { sstr << "|value| " << opstr << " " << std::setprecision(3) << std::scientific << vmin; } else { sstr  << "value "<< opstr << " " << std::setprecision(3) << std::scientific << vmin; } 
+    }  else { 
+      if ( isAbs ) { 
+	sstr << std::setprecision(3) << std::scientific << vmin << " < |value| < " << std::setprecision(3) << std::scientific << vmax;
+      } else { 
+	sstr << std::setprecision(3) << std::scientific << vmin << " < value < " << std::setprecision(3) << std::scientific << vmax;
+      }
+    }
+    filters.push_back(sstr.str()); 
+    nlf = std::max(nlf,(int)filters.back().length());
+  }
+  // 
+  sprintf(_buffer,"[ClusterTreePlotter::printContent()] INFO %-*.*s %-*.*s %-*.*s\n",nls,nls,_colTitles.at(0).c_str(),nlw,nlw,_colTitles.at(1).c_str(),nlf,nlf,_colTitles.at(2).c_str());
+  ostr << "[ClusterTreePlotter::printContent()] INFO\n" << std::string(_buffer);
+  size_t ictr(0); 
+  for ( auto fsel : m_selectors ) { 
+    sprintf(_buffer,"[ClusterTreePlotter::printContent()] INFO %-*.*s %-*.*s %-*.*s\n",nls,nls,objectScale(fsel.first).c_str(),nlw,nlw,valueType(std::get<0>(fsel.second)).c_str(),nlf,nlf,filters.at(ictr).c_str()); ++ictr;
+    ostr << std::string(_buffer);
+  }
+  //
+  ostr << "[ClusterTreePlotter::printContent()] INFO\n";
+  return ostr; 
 }
 
 ///////////////////
@@ -236,23 +294,22 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry); if (ientry < 0) break;
       fChain->GetEntry(jentry); 
-      // particle selection
-      // double ppdg = absVal ? std::abs(truthPDG) : truthPDG; 
-      // if ( pdgID != 0 && ppdg != pdgID ) { continue; }
-      // kentry++;
-      fillParticle(false); 
+      // particle and jet selection selection
+      fillParticle(false);
       fillJet(false); 
       // cluster selection by particle or jet
       if ( !filter(ParticleScale::TRUTH) || !filter(JetScale::LCJES) ) { continue; } 
       kentry++;
+      std::cout << "**** passed particle/jet filter " << kentry << "/" << nentries << std::endl;
       fillParticle(true); 
       fillJet(true); 
       // cluster selection by cluster
       if ( !filter(ClusterScale::TRUTH) || !filter(ClusterScale::LCW) ) { continue; }
-      //
+      std::cout << "**** passed cluster filter (1) " << kentry << "/" << nentries << std::endl;
       double edep(0.); 
       if ( !fillValue<double>(ValueType::E,(uint_t)ClusterScale::TRUTH,edep) ) { continue; }
       lentry++;
+      std::cout << "**** passed cluster filter (2) " << lentry << "/" << nentries << std::endl;
       // collect signals
       double eem   (clusterE); 
       double elcw  (cluster_HAD_WEIGHT*eem); 
@@ -364,9 +421,8 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
    binNormalize(h_jet_truthpt_excl);  
 
    // -- write 
-   TFile* outf = new TFile("ml_pions.hist.root","RECREATE");
-   HistManager::instance()->write();
-   outf->Close();
+   TFile* outf = isParticle() ? new TFile("ml_pions.hist.root","RECREATE") : isJet() ? new TFile("ml_jets.hist.root","RECREATE") : (TFile*)0;
+   if ( outf != nullptr ) { HistManager::instance()->write(); outf->Close(); }
 }
 
 void ClusterTreePlotter::binNormalize(TH1* hptr) {
@@ -383,8 +439,8 @@ void ClusterTreePlotter::binNormalize(TH1* hptr) {
     hptr->SetBinContent(i,yval);
     hptr->SetBinError(i,yerr); 
   }
-  printf("[ClusterTreePlotter::binNormalize()] INFO entries  (old/new): %.0f/%.3f\n",nenOld,hptr->GetEntries()); 
-  printf("[ClusterTreePlotter::binNormalize()] INFO integral (old/new): %.3f/%.3f\n",intOld,intNew); 
+  printf("[ClusterTreePlotter::binNormalize()] INFO entries  (old/new): %.0f/%.0f for \042%s\042\n",nenOld,hptr->GetEntries(),hptr->GetName()); 
+  printf("[ClusterTreePlotter::binNormalize()] INFO integral (old/new): %.3f/%.3f for \042%s\042\n",intOld,intNew            ,hptr->GetName()); 
 }
 
 bool ClusterTreePlotter::fillParticle(bool final) {
