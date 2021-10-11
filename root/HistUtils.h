@@ -118,7 +118,7 @@ namespace HistUtils {
   static bool stats(TH1D* h,double& m,double& dl,double& dh,Stats s=Mean,const std::string& opt="RMS")
   {
     static const std::vector<std::string> _knownOpts = { "ERROR", "RMS" };
-    // check optoins
+    // check options
     if ( std::find(_knownOpts.begin(),_knownOpts.end(),opt) == _knownOpts.end() ) { 
       printf("[HistUtils::stats(...)] ERROR unknown option \042%s\042, use \042ERROR\042 or \042RMS\042\n",opt.c_str());
       return false;
@@ -163,7 +163,7 @@ namespace HistUtils {
       }
       if ( wh > 0. ) { 
 	dh = TMath::Sqrt(TMath::Abs(dh)/wh);
-	if ( opt == "ERROR" ) { dl /= TMath::Sqrt(wh); }
+	if ( opt == "ERROR" ) { dh /= TMath::Sqrt(wh); }
       } else { 
 	dh = 0.; 
       }

@@ -73,16 +73,17 @@ namespace Types {
     //    2       true/false flag indicating a graph should be calculated for distribution
     //    3       pointer to graph object
     //    4       plot title
-    typedef std::tuple<Hist::Identifier,TH1*,bool,TGraph*,std::string> Content;
+    typedef std::tuple<Hist::Identifier,TH1*,bool,TGraph*,TGraph*,std::string> Content;
     // accessors
     static const Hist::Identifier& histogram   (const Content& pcont) { return std::get<0>(pcont); }
     static       TH1*              distribution(const Content& pcont) { return std::get<1>(pcont); }
     static       bool              doGraph     (const Content& pcont) { return std::get<2>(pcont); }
-    static       TGraph*           graph       (const Content& pcont) { return std::get<3>(pcont); }
-    static const std::string&      title       (const Content& pcont) { return std::get<4>(pcont); } 
+    static       TGraph*           graphRMS    (const Content& pcont) { return std::get<3>(pcont); }
+    static       TGraph*           graphERR    (const Content& pcont) { return std::get<4>(pcont); }
+    static const std::string&      title       (const Content& pcont) { return std::get<5>(pcont); } 
     // helpers
-    static Content content(const Hist::Identifier& phid,TH1* phptr=(TH1*)0,bool pdograph=false,TGraph* pgptr=(TGraph*)0,const std::string& ptitle="") { 
-      return { phid, phptr, pdograph, pgptr, ptitle };
+    static Content content(const Hist::Identifier& phid,TH1* phptr=(TH1*)0,bool pdograph=false,TGraph* pgptr=(TGraph*)0,TGraph* egptr=(TGraph*)0,const std::string& ptitle="") { 
+      return { phid, phptr, pdograph, pgptr, egptr, ptitle };
     } 
   }
 
@@ -108,7 +109,7 @@ namespace Types {
   }
 }
 
-void plotClusterJet(const std::string& fileName="JZ3.full.topo-cluster.hist.root",const std::string& fdir="plots",double minEntries=50.) {
+void plotClusterJet(const std::string& fileName="JZ3.full.topo-cluster.hist.root",const std::string& fdir="plots",bool doSpread=true,double minEntries=50.) {
               
   // known histogram identifiers
   static const std::vector<Types::Hist::Identifier> knownHists = { 
@@ -389,7 +390,7 @@ void plotClusterJet(const std::string& fileName="JZ3.full.topo-cluster.hist.root
       TH2D* hptr = (TH2D*)fptr->FindObjectAny(rname.c_str()); 
       if ( hptr != nullptr ) {
  	printf("[plotClusterJet] INFO booked %s at %p name = \042%s\042 => ",rtype.c_str(),(void*)hptr,hptr->GetName());
-	plotLookup[rname] = { pdescr, hptr, true, (TGraph*)HistUtils::graph(hptr,"response",2,HistUtils::Mean,"RMS",minEntries), ptitle }; 
+	plotLookup[rname] = { pdescr, hptr, true, (TGraph*)HistUtils::graph(hptr,"response",2,HistUtils::Mean,"RMS",minEntries),(TGraph*)HistUtils::graph(hptr,"response",2,HistUtils::Mean,"ERROR",minEntries),ptitle }; 
       }
     }
   }
@@ -425,13 +426,16 @@ void plotClusterJet(const std::string& fileName="JZ3.full.topo-cluster.hist.root
     // plot
     hptr->Draw(opts.c_str());
     if ( Types::Plot::doGraph(pcont) ) { 
-      TGraphAsymmErrors* gptr = (TGraphAsymmErrors*)Types::Plot::graph(pcont);
-      if ( gptr != nullptr ) { 
+      TGraphAsymmErrors* gptr = (TGraphAsymmErrors*)Types::Plot::graphRMS(pcont);
+      TGraphAsymmErrors* eptr = (TGraphAsymmErrors*)Types::Plot::graphERR(pcont);
+      if ( gptr != nullptr && eptr != nullptr ) {
 	gptr->SetLineStyle(1)   ; gptr->SetLineColorAlpha(kRed,0.25) ; gptr->SetLineWidth(2)   ;/* gptr->SetFillColorAlpha(kGreen,0.75); */ 
-	gptr->SetMarkerStyle(20); gptr->SetMarkerColor(kRed)         ; gptr->SetMarkerSize(0.5); 
-	// gptr->Draw("same p2");
-	gptr->Draw("same p");
-	gptr->SetName(TString::Format("%s_graph_mean",hptr->GetName()).Data()); gptr->Write();
+	gptr->SetMarkerStyle(20); gptr->SetMarkerColor(kRed)         ; gptr->SetMarkerSize(0.5);
+	eptr->SetLineStyle(1)   ; eptr->SetLineColorAlpha(kRed,0.25) ; eptr->SetLineWidth(2)   ;/* gptr->SetFillColorAlpha(kGreen,0.75); */ 
+	eptr->SetMarkerStyle(20); eptr->SetMarkerColor(kRed)         ; eptr->SetMarkerSize(0.5);
+	if ( doSpread ) { gptr->Draw("same p");  } else { eptr->Draw("same p"); }
+	gptr->SetName(TString::Format("%s_graph_mean_rms",hptr->GetName()).Data()); gptr->Write();
+	eptr->SetName(TString::Format("%s_graph_mean_err",hptr->GetName()).Data()); eptr->Write();
 	if ( doResponseLines.at(rname) ) {
 	  TLine* cl = new TLine(xmin,1.0,xmax,1.0); cl->SetLineWidth(1); cl->SetLineStyle(9); cl->Draw("lsame");
 	  TLine* ul = new TLine(xmin,1.1,xmax,1.1); ul->SetLineWidth(1); ul->SetLineStyle(7); ul->Draw("lsame");
