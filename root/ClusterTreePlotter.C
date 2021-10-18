@@ -154,6 +154,7 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
 
    Long64_t nentries = fChain->GetEntriesFast();
 
+   // -- logarithmic binning energy
    double xmin(.05); double xmax(2000.);
    double ymin(0.) ; double ymax(2); 
    int    n_bins(100);
@@ -162,23 +163,33 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
    std::vector<double> logEbins(n_bins+1,0.);
    for ( size_t i(0); i<logEbins.size(); ++i ) { logEbins[i] = std::pow(10.,lxmin); lxmin += lxwid; }
 
+   // -- logarithmic binning signal density
    double rmin(std::pow(10.,-8.5)); double rmax(std::pow(10.,-3.5));
    double rxmin(std::log10(rmin)); double rxmax(std::log10(rmax)); 
    double rxwid((rxmax-rxmin)/(double(n_bins)));
    std::vector<double> logRbins(n_bins+1,0.);
    for ( size_t i(0); i<logRbins.size(); ++i ) { logRbins[i] = std::pow(10.,rxmin); rxmin += rxwid; }
 
+   // -- logarithmic binning cluster depth
    double dmin(10e-03); double dmax(10e+04); 
    double dxmin(std::log10(dmin)); double dxmax(std::log10(dmax));
    double dxwid((dxmax-dxmin)/((double)n_bins));
    std::vector<double> logLbins(n_bins+1,0.); 
    for ( size_t i(0); i<logLbins.size(); ++i ) { logLbins[i] = std::pow(10.,dxmin); dxmin += dxwid; }
 
+   // -- logarithmic binning cluster significance
    double smin(std::pow(10.,-2.)); double smax(std::pow(10,4.)); 
    double sxmin(std::log10(smin)); double sxmax(std::log10(smax));
    double sxwid((sxmax-sxmin)/((double)n_bins));
    std::vector<double> logSbins(n_bins+1,0.); 
    for ( size_t i(0); i<logSbins.size(); ++i ) { logSbins[i] = std::pow(10.,sxmin); sxmin += sxwid; }
+
+   // -- logarithmic binning frational signal contribution
+   double fmin(std::pow(10.,-4.)); double fmax(1.);
+   double fxmin(std::log10(fmin)); double fxmax(std::log10(fmax));
+   double fxwid((fxmax-fxmin)/((double)n_bins));
+   std::vector<double> logFbins(n_bins+1,0.); 
+   for ( size_t i(0); i<logFbins.size(); ++i ) { logFbins[i] = std::pow(10.,fxmin); fxmin += fxwid; }
    
    printf("[ClusterTreePlotter::Loop()] INFO [%lli] calculated energy binning (%zu bins)\n",nentries,logEbins.size()-1); 
 
@@ -232,13 +243,21 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
    d_lc_resp_edep_e300 = Hist::book<TH2D>("LCR_Edep_e300","LCW response vs EclusDep EclusDep>300 MeV",logEbins,n_bins,ymin,ymax,"E_{clus}^{dep} [GeV]","E_{clus}^{LCW}/E_{clus}^{dep}");
    d_ml_resp_edep_e300 = Hist::book<TH2D>("MLR_Edep_e300","ML  response vs EclusDep EclusDep>300 MeV",logEbins,n_bins,ymin,ymax,"E_{clus}^{dep} [GeV]","E_{clus}^{ML}/E_{clus}^{dep}" );
 
+   // -- evaluation scale: fractional signal contribution
+   d_em_resp_efrc_incl = Hist::book<TH2D>("EMR_Efrc_incl","EM  response vs fractional signal contribution (inclusive)"     ,logFbins,n_bins,ymin,ymax,"E_{clus}^{EM}/#sum^{}E_{clus,i}^{EM}","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_efrc_incl = Hist::book<TH2D>("LCR_Efrc_incl","LCW response vs fractional signal contribution (inclusive)"     ,logFbins,n_bins,ymin,ymax,"E_{clus}^{EM}/#sum^{}E_{clus,i}^{EM}","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_efrc_incl = Hist::book<TH2D>("MLR_Efrc_incl","ML  response vs fractional signal contribution (inclusive)"     ,logFbins,n_bins,ymin,ymax,"E_{clus}^{EM}/#sum^{}E_{clus,i}^{EM}","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_efrc_e300 = Hist::book<TH2D>("EMR_Efrc_e300","EM  response vs fractional signal contribution EclusDep>300 MeV",logFbins,n_bins,ymin,ymax,"E_{clus}^{EM}/#sum^{}E_{clus,i}^{EM}","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_efrc_e300 = Hist::book<TH2D>("LCR_Efrc_e300","LCW response vs fractional signal contribution EclusDep>300 MeV",logFbins,n_bins,ymin,ymax,"E_{clus}^{EM}/#sum^{}E_{clus,i}^{EM}","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_efrc_e300 = Hist::book<TH2D>("MLR_Efrc_e300","ML  response vs fractional signal contribution EclusDep>300 MeV",logFbins,n_bins,ymin,ymax,"E_{clus}^{EM}/#sum^{}E_{clus,i}^{EM}","E_{clus}^{ML}/E_{clus}^{dep}" );
+
    // -- evaluation scale: signal density
-   d_em_resp_rho__incl = Hist::book<TH2D>("EMR_rho__incl","EM  response vs RhoClus (inclusive)",logRbins,n_bins,ymin,ymax,"\rho_{clus} [GeV/mm^{3}]","E_{clus}^{EM}/E_{clus}^{dep}" );
-   d_lc_resp_rho__incl = Hist::book<TH2D>("LCR_rho__incl","LCW response vs RhoClus (inclusive)",logRbins,n_bins,ymin,ymax,"\rho_{clus} [GeV/mm^{3}]","E_{clus}^{LCW}/E_{clus}^{dep}");
-   d_ml_resp_rho__incl = Hist::book<TH2D>("MLR_rho__incl","ML  response vs RhoClus (inclusive)",logRbins,n_bins,ymin,ymax,"\rho_{clus} [GeV/mm^{3}]","E_{clus}^{ML}/E_{clus}^{dep}" );
-   d_em_resp_rho__e300 = Hist::book<TH2D>("EMR_rho__e300","EM  response vs RhoClus EclusDep>300 MeV",logRbins,n_bins,ymin,ymax,"\rho_{clus} [GeV/mm^{3}]","E_{clus}^{EM}/E_{clus}^{dep}" );
-   d_lc_resp_rho__e300 = Hist::book<TH2D>("LCR_rho__e300","LCW response vs RhoClus EclusDep>300 MeV",logRbins,n_bins,ymin,ymax,"\rho_{clus} [GeV/mm^{3}]","E_{clus}^{LCW}/E_{clus}^{dep}");
-   d_ml_resp_rho__e300 = Hist::book<TH2D>("MLR_rho__e300","ML  response vs RhoClus EclusDep>300 MeV",logRbins,n_bins,ymin,ymax,"\rho_{clus} [GeV/mm^{3}]","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_rho__incl = Hist::book<TH2D>("EMR_rho__incl","EM  response vs RhoClus (inclusive)",logRbins,n_bins,ymin,ymax,"#rho_{clus} [GeV/mm^{3}]","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_rho__incl = Hist::book<TH2D>("LCR_rho__incl","LCW response vs RhoClus (inclusive)",logRbins,n_bins,ymin,ymax,"#rho_{clus} [GeV/mm^{3}]","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_rho__incl = Hist::book<TH2D>("MLR_rho__incl","ML  response vs RhoClus (inclusive)",logRbins,n_bins,ymin,ymax,"#rho_{clus} [GeV/mm^{3}]","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_rho__e300 = Hist::book<TH2D>("EMR_rho__e300","EM  response vs RhoClus EclusDep>300 MeV",logRbins,n_bins,ymin,ymax,"#rho_{clus} [GeV/mm^{3}]","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_rho__e300 = Hist::book<TH2D>("LCR_rho__e300","LCW response vs RhoClus EclusDep>300 MeV",logRbins,n_bins,ymin,ymax,"#rho_{clus} [GeV/mm^{3}]","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_rho__e300 = Hist::book<TH2D>("MLR_rho__e300","ML  response vs RhoClus EclusDep>300 MeV",logRbins,n_bins,ymin,ymax,"#rho_{clus} [GeV/mm^{3}]","E_{clus}^{ML}/E_{clus}^{dep}" );
 
    // -- evaluation scale: depth
    d_em_resp_lamb_incl = Hist::book<TH2D>("EMR_lamb_incl","EM  response vs MlongClus (inclusive)",logLbins,n_bins,ymin,ymax,"#LTm^{2}_{long}#GT","E_{clus}^{EM}/E_{clus}^{dep}" );
@@ -281,12 +300,12 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
    d_ml_resp_ptd__e300 = Hist::book<TH2D>("MLR_ptd__e300","ML  response vs PtD EclusDep>300 MeV",102,-0.1,1.1,n_bins,ymin,ymax,"P_{t}D","E_{clus}^{ML}/E_{clus}^{dep}" );
 
    // -- evaluation scale: second moment of time
-   d_em_resp_time_incl = Hist::book<TH2D>("EMR_time_incl","EM  response vs SigmaTime2 (inclusive)",500,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
-   d_lc_resp_time_incl = Hist::book<TH2D>("LCR_time_incl","LCW response vs SigmaTime2 (inclusive)",500,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
-   d_ml_resp_time_incl = Hist::book<TH2D>("MLR_time_incl","ML  response vs SigmaTime2 (inclusive)",500,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
-   d_em_resp_time_e300 = Hist::book<TH2D>("EMR_time_e300","EM  response vs SigmaTime2 EclusDep>300 MeV",500,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
-   d_lc_resp_time_e300 = Hist::book<TH2D>("LCR_time_e300","LCW response vs SigmaTime2 EclusDep>300 MeV",500,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
-   d_ml_resp_time_e300 = Hist::book<TH2D>("MLR_time_e300","ML  response vs SigmaTime2 EclusDep>300 MeV",500,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_time_incl = Hist::book<TH2D>("EMR_time_incl","EM  response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_time_incl = Hist::book<TH2D>("LCR_time_incl","LCW response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_time_incl = Hist::book<TH2D>("MLR_time_incl","ML  response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_time_e300 = Hist::book<TH2D>("EMR_time_e300","EM  response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_time_e300 = Hist::book<TH2D>("LCR_time_e300","LCW response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_time_e300 = Hist::book<TH2D>("MLR_time_e300","ML  response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
 
    printf("[ClusterTreePlotter::Loop()] INFO looking for PDG ID %.0f\n",pdgID);
    // -- loop tuple
@@ -324,6 +343,7 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
       double longitudinal(cluster_LONGITUDINAL); 
       double lateral(cluster_LATERAL); 
       double stime(std::sqrt(cluster_SECOND_TIME)); 
+      double efrac(cluster_fracE); 
       // derived quantities
       double rem (eem /edep); 
       double rlcw(elcw/edep); 
@@ -338,6 +358,9 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
       d_em_resp_edep_incl->Fill(edep,rem );
       d_lc_resp_edep_incl->Fill(edep,rlcw);
       d_ml_resp_edep_incl->Fill(edep,rml );
+      d_em_resp_efrc_incl->Fill(efrac,rem );
+      d_lc_resp_efrc_incl->Fill(efrac,rlcw);
+      d_ml_resp_efrc_incl->Fill(efrac,rml );
       d_em_resp_rho__incl->Fill(rho,rem );
       d_lc_resp_rho__incl->Fill(rho,rlcw);
       d_ml_resp_rho__incl->Fill(rho,rml );
@@ -369,6 +392,9 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
 	d_em_resp_edep_e300->Fill(edep,rem );
 	d_lc_resp_edep_e300->Fill(edep,rlcw);
 	d_ml_resp_edep_e300->Fill(edep,rml );
+	d_em_resp_efrc_e300->Fill(efrac,rem );
+	d_lc_resp_efrc_e300->Fill(efrac,rlcw);
+	d_ml_resp_efrc_e300->Fill(efrac,rml );
 	d_em_resp_rho__e300->Fill(rho,rem );
 	d_lc_resp_rho__e300->Fill(rho,rlcw);
 	d_ml_resp_rho__e300->Fill(rho,rml );

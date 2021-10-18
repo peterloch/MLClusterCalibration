@@ -456,6 +456,14 @@ private:
    TH2D* d_lc_resp_edep_e300 = { (TH2D*)0 };
    TH2D* d_ml_resp_edep_e300 = { (TH2D*)0 };
 
+   // -- evaluation scale: signal fraction
+   TH2D* d_em_resp_efrc_incl = { (TH2D*)0 };
+   TH2D* d_lc_resp_efrc_incl = { (TH2D*)0 };
+   TH2D* d_ml_resp_efrc_incl = { (TH2D*)0 };
+   TH2D* d_em_resp_efrc_e300 = { (TH2D*)0 };
+   TH2D* d_lc_resp_efrc_e300 = { (TH2D*)0 };
+   TH2D* d_ml_resp_efrc_e300 = { (TH2D*)0 };
+
    // -- evaluation scale: signal density
    TH2D* d_em_resp_rho__incl = { (TH2D*)0 };
    TH2D* d_lc_resp_rho__incl = { (TH2D*)0 };

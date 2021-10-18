@@ -5,12 +5,14 @@
 #include <TH1.h>
 #include <TGraph.h>
 #include <TFile.h>
+#include <TCanvas.h>
 
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include <cstdio>
+#include <cstring>
 
 namespace Types {
 
@@ -119,12 +121,16 @@ namespace Types {
     typedef double                                          Size           ; // marker size
     typedef double                                          Alpha          ; // transparency   
 
+    // -- dummy reference
+    static const std::string invalidReturnStringRef = { "INVALID" };
+    static const std::string unknownReturnStringRef = { "UNKNOWN" };
+
     // -- common graph tags 
     static const std::vector<ScaleTag>     knownScales       = { "EM", "LC", "ML" };
     static       std::map<ScaleTag,size_t> knownScaleIndices = { }; 
-    static const int scaleIndex(const ScaleTag& scaleTag) { 
-      if ( knownScaleIndices.empty() ) { for ( size_t idx(0); i<knownScales.size(); ++i ) { knownScaleIndices[knownScales.at(idx)] = idx; } }
-      return (auto ftag = knownScaleIndices.find(scaleTag)) != knownScaleIndices.end() ? ftag.second : -1; 
+    static       int scaleIndex(const ScaleTag& scaleTag) { 
+      if ( knownScaleIndices.empty() ) { for ( size_t idx(0); idx<knownScales.size(); ++idx ) { knownScaleIndices[knownScales.at(idx)] = idx; } }
+      return knownScaleIndices.find(scaleTag) != knownScaleIndices.end() ? knownScaleIndices.at(scaleTag) : -1; 
     }
 
     // --------------------------------------------------------------------- object stores and lookup
@@ -142,8 +148,8 @@ namespace Types {
     typedef std::map<Key,NameGroup>                         NameGroupMap   ; // lookup table for groups of graph names 
 
     // -- functions for object retrieval
-    template<INT I,class T> static const std::tuple_element<I,T>& access(const T& tuple) { return std::get<I>(tuple); } // get graph pointer or name (constant reference)   
-    template<INT I,class T> static       std::tuple_element<I,T>& access(      T& tuple) { return std::get<I>(tuple); } // get graph pointer of name (non-const reference)
+    template<int I,class T> static const typename std::tuple_element<I,T>::type& access(const T& tuple) { return std::get<I>(tuple); } // get graph pointer or name (constant reference)   
+    template<int I,class T> static       typename std::tuple_element<I,T>::type& access(      T& tuple) { return std::get<I>(tuple); } // get graph pointer of name (non-const reference)
     // -- accessors: load graph from file into group
     template<class G> static G*   loadGraph(TFile* dataFile,const std::string& graphName)                    { G* gptr = ( G* )dataFile->FindObjectAny(graphName.c_str()); return gptr; }
     template<class G> static bool loadGraph(TFile* dataFile,const std::string& graphName,PointerGroup& pgrp,const std::string& scaleTag) {
@@ -162,13 +168,13 @@ namespace Types {
       }
       return setFlag;
     }   
-    template<class G> static bool loadGraph(TFile* dataFile,const NameGroup& ngrp,PointerGroup& pgrp) { 
+    // template<class G> static bool loadGraph(TFile* dataFile,const NameGroup& ngrp,PointerGroup& pgrp) { 
       
-    }
+    // }
     // -- accessor: find graph pointer in group
     template<class G> static G*   findGraph(PointerGroup& pgrp,const std::string& scaleTag) {
       // check input
-      int idx(scaleIndex(scaleTag)); if ( idx < 0 ) { printf("[Types::Graph::findGraph(...)] WARN scale tag %s unknown, no graph found in group\n",scaleTag.c_str()); return false; }
+      int idx(scaleIndex(scaleTag)); if ( idx < 0 ) { printf("[Types::Graph::findGraph(...)] WARN scale tag %s unknown, no graph found in group\n",scaleTag.c_str()); return ( G* )0; }
       // associate index with graph
       G* graphPtr = ( G* )0; 
       switch ( idx ) { 
@@ -180,17 +186,19 @@ namespace Types {
       return graphPtr; 
     } 
     // -- accessor: find graph name in group
-    static const std::string& findGraph(const NameGroup& ngrp,const std::string& scaleTag) { 
+    static std::string findGraph(const NameGroup& ngrp,const std::string& scaleTag) { 
       // check input
-      int idx(scaleIndex(scaleTag)); if ( idx < 0 ) { printf("[Types::Graph::findGraph(...)] WARN scale tag %s unknown, no graph found in group\n",scaleTag.c_str()); return false; }
+      int idx(scaleIndex(scaleTag)); if ( idx < 0 ) { printf("[Types::Graph::findGraph(...)] WARN scale tag %s unknown, no graph found in group\n",scaleTag.c_str()); return unknownReturnStringRef; }
       //
-      std::string gname;
+      std::string strRef(invalidReturnStringRef);
       switch ( idx ) {
-      case 0 : gname = access<0,NameGroup>(ngrp); break;
-      case 1 : gname = access<1,NameGroup>(ngrp); break;
-      case 2 : gname = access<2,NameGroup>(ngrp); break; 
+      case 0 : strRef = access<0,NameGroup>(ngrp); break;
+      case 1 : strRef = access<1,NameGroup>(ngrp); break;
+      case 2 : strRef = access<2,NameGroup>(ngrp); break;
+      default: printf("[Types::Graph::findGraph(...)] WARN scale tag %s invalid, no graph found in group\n",scaleTag.c_str()); 
       }
-    } 
+      return strRef; 
+    }
 
     // --------------------------------------------------------------------- plot configurations and descriptions
     // Position   Content for line/marker
@@ -200,28 +208,108 @@ namespace Types {
     //    3       transparency   
     typedef std::tuple<Color,Style,Width,Alpha>             LineDescriptor  ; // line descriptor type
     typedef std::tuple<Color,Style,Size ,Alpha>             MarkerDescriptor; // marker descriptor type
+    typedef std::tuple<Color,Style,Alpha,Width>             FillDescriptor;   // fill area descriptor
 
     // --------------------------------------------------------------------- functions for plot configurations
-    // extract information from descriptors
-    template<class D> static int    getColor(const D& descriptor) { return std::get<0>(descriptor); }
-    template<class D> static int    getStyle(const D& descriptor) { return std::get<1>(descriptor); }
-    template<class D> static int    getWidth(const D& descriptor) { return std::get<2>(descriptor); }
-    template<class D> static double getSize (const D& descriptor) { return std::get<2>(descriptor); }
-    template<class D> static double getAlpha(const D& descriptor) { return std::get<3>(descriptor); }
+    // generate a descriptor
+    struct DescriptionFactory{ 
+      static LineDescriptor   Line  (Color color,Style style,Width width,Alpha alpha) { return { color, style, width, alpha }; }
+      static FillDescriptor   Fill  (Color color,Style style,Width width,Alpha alpha) { return { color, style, alpha, width }; }
+      static MarkerDescriptor Marker(Color color,Style style,Size  size, Alpha alpha) { return { color, style, size,  alpha }; }
+    };
+    // extract information from descriptors: lines
+    static int    getColor(const LineDescriptor&   descriptor) { return std::get<0>(descriptor); }
+    static int    getStyle(const LineDescriptor&   descriptor) { return std::get<1>(descriptor); }
+    static int    getWidth(const LineDescriptor&   descriptor) { return std::get<2>(descriptor); }
+    static double getAlpha(const LineDescriptor&   descriptor) { return std::get<3>(descriptor); }
+    // extract information from descriptors: markers
+    static int    getColor(const MarkerDescriptor& descriptor) { return std::get<0>(descriptor); }
+    static int    getStyle(const MarkerDescriptor& descriptor) { return std::get<1>(descriptor); }
+    static double getSize (const MarkerDescriptor& descriptor) { return std::get<2>(descriptor); }
+    static double getAlpha(const MarkerDescriptor& descriptor) { return std::get<3>(descriptor); }
+    // extract information from descriptors: fill area
+    static int    getColor(const FillDescriptor&   descriptor) { return std::get<0>(descriptor); }
+    static int    getStyle(const FillDescriptor&   descriptor) { return std::get<1>(descriptor); }
+    static int    getWidth(const FillDescriptor&   descriptor) { return std::get<3>(descriptor); }
+    static double getAlpha(const FillDescriptor&   descriptor) { return std::get<2>(descriptor); }
     // set style
-    template<class H,class D> static void setDrawStyle(H* hptr,const D& descriptor) { 
-      double alpha(getAlpha< D >(descriptor)); 
-      if ( alpha > 0. && alpha < 1. ) { hptr->SetLineColorAlpha(getColor< D >(descriptor),alpha); } else { hptr->SetLineColor(getColor< D >(descriptor)); }
-      hptr->SetLineStyle(getStyle< D >(descriptor)); 
-      hptr->SetLineWidth(getWidth< D >(descriptor)); 		       
+    template<class H> static void setDrawStyle(H* hptr,const LineDescriptor& descriptor) { 
+      double alpha(getAlpha(descriptor)); 
+      if ( alpha > 0. && alpha < 1. ) { hptr->SetLineColorAlpha(getColor(descriptor),alpha); } else { hptr->SetLineColor(getColor(descriptor)); }
+      hptr->SetLineStyle(getStyle(descriptor)); 
+      hptr->SetLineWidth(getWidth(descriptor)); 		       
     }
     template<class H> static void setDrawStyle(H* hptr,const MarkerDescriptor& descriptor) { 
-      double alpha(getAlpha< D >(descriptor)); 
-      if ( alpha > 0. && alpha < 1. ) { hptr->SetMarkerColorAlpha(getColor< D >(descriptor),alpha); } else { hptr->SetMarkerColor(getColor< D >(descriptor)); }
-      hptr->SetMarkerStyle(getStyle< D >(descriptor)); 
-      hptr->SetMarkerSize (getSize< D > (descriptor)); 		       
+      double alpha(getAlpha(descriptor)); 
+      if ( alpha > 0. && alpha < 1. ) { hptr->SetMarkerColorAlpha(getColor(descriptor),alpha); } else { hptr->SetMarkerColor(getColor(descriptor)); }
+      hptr->SetMarkerStyle(getStyle(descriptor)); 
+      hptr->SetMarkerSize (getSize (descriptor)); 		       
+    }
+    template<class H> static void setDrawStyle(H* hptr,const FillDescriptor& descriptor) { 
+      double alpha(getAlpha(descriptor));
+      if ( alpha > 0. && alpha < 1. ) { hptr->SetFillColorAlpha(getColor(descriptor),alpha); } else { hptr->SetFillColor(getColor(descriptor)); }
+      hptr->SetFillStyle(getStyle(descriptor));
+      if ( getWidth(descriptor) >= 0 ) { hptr->SetLineWidth(getWidth(descriptor)); } 
+    }
+    template<class H> static void setDrawStyle(H* hptr,const LineDescriptor& ldescr,const FillDescriptor& fdescr,const MarkerDescriptor& mdescr) { 
+      setDrawStyle(hptr,ldescr); setDrawStyle(hptr,fdescr); setDrawStyle(hptr,mdescr); 
     }
   } // Graph
 } // Types
+
+namespace File {
+  // -- IO modes
+  struct IO { 
+    enum Mode { Read = 0x01, Write = 0x02, Recreate = 0x12, Append = 0x22, Unknown = 0x00  };
+  };
+  // -- open a ROOT file
+  static TFile* open(const std::string& fileName,IO::Mode ioMode=IO::Read,bool printInfo=true) { 
+    const static std::map<IO::Mode,const std::string> rootIOMode = { 
+      { IO::Read    , "READ"     },
+      { IO::Write   , "WRITE"    },
+      { IO::Recreate, "RECREATE" },
+      { IO::Append  , "APPEND"   },
+      { IO::Unknown , "UNKNOWN"  }
+    };
+    // check on mode
+    if ( ioMode == IO::Unknown ) { printf("[File::open(...)] ABRT unknown IO mode, no file opened\n"); return (TFile*)0; }
+    // open file
+    TFile* f = new TFile(fileName.c_str(),rootIOMode.at(ioMode).c_str());
+    if ( f == nullptr ) { printf("[File::open(...)] WARN could not open file \042%s\042 with mode <%s>\n",fileName.c_str(),rootIOMode.at(ioMode).c_str()); return (TFile*)0; }
+    // success
+    if ( printInfo ) { printf("[File::open(...)] INFO opened file \042%s\042 with mode <%s>\n",fileName.c_str(),rootIOMode.at(ioMode).c_str()); }
+    return f;
+  }
+  // -- get directory name from input file
+  static std::string directory(const std::string& fileName,const char separator='/') { return fileName.substr(0,fileName.find_last_of(separator)); }
+  // -- get extension
+  static std::string extension(const std::string& fileName,const char separator='.') { auto ipos = fileName.find_last_of(separator); return ipos != std::string::npos ? fileName.substr(ipos+1) : ""; }
+  // -- generate a file name by stripping extensions
+  static std::string name(const std::string& sourceFileName,bool includeDir=true,const char separatorExt='.',const char separatorDir='/') {
+    std::string body = includeDir ? sourceFileName : sourceFileName.substr(0,sourceFileName.find_last_of(separatorDir)); 
+    return body.substr(0,body.find_last_of(separatorExt));
+  }
+  // -- generate print file names 
+  static std::string print(const std::string& fileName,const std::string& ext="pdf",bool includeDir=true) { 
+    static char _buffer[2049];
+    if ( ext == "" ) { return fileName; }
+    sprintf(_buffer,"%s.%s",name(fileName,includeDir).c_str(),ext.c_str());    
+    return std::string(_buffer); 
+  }
+} // File
+
+namespace String {
+  namespace Tags {
+    static const std::string empty = "";
+  } // String::Tags 
+  static std::string extractVariable(const std::string& varStr) { std::string vs(varStr.substr(0,varStr.find_first_of('['))); return vs.find_last_of(' ') == vs.length()-1 ? vs.substr(0,vs.length()-1) : vs; }
+  static std::string extractUnit    (const std::string& varStr) { 
+    auto fbegin = varStr.find_first_of('['); if ( fbegin == std::string::npos ) { return Tags::empty; }
+    auto fend   = varStr.find_last_of (']'); if ( fend   == std::string::npos ) { return Tags::empty; }
+    if ( fend < fbegin ) { return Tags::empty; }
+    // return value between []
+    return varStr.substr(fbegin+1,fend-fbegin-1);
+  }
+} // String
 
 #endif
