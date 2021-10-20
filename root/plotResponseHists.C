@@ -10,8 +10,10 @@
 #include <string>
 #include <map>
 #include <tuple>
+#include <vector>
 
 #include <cstdio>
+#include <cmath>
 
 namespace Data {
   namespace Jet  {
@@ -107,9 +109,49 @@ namespace Data {
   static const axismap_t::mapped_type&  plotAxisData (axismap_t::const_iterator fentry)                               { return fentry->second; }
   static const axis_t&                  plotAxisDescr(const axismap_t::value_type& entry,const std::string& axis="x") { return axis == "x" ? std::get<0>(plotAxisData(entry))  : std::get<1>(plotAxisData(entry)) ; }  
   static const axis_t&                  plotAxisDescr(axismap_t::const_iterator fentry,const std::string& axis="x")   { return axis == "x" ? std::get<0>(plotAxisData(fentry)) : std::get<1>(plotAxisData(fentry)); }  
+
+#include "DrawStyles.h"
+
+  // collection types supporting [key,[EM,LC,ML]]_2D -> [key,[EM,LC,ML]]_1D
+  typedef Types::Graph::Key                Key;
+  typedef std::tuple<TH1D*,TH1D*,TH1D*>    HistTuple;
+  typedef std::tuple<TH2D*,TH2D*,TH2D*>    DistTuple;
+  typedef HistUtils::vslice_t              Slice;
+  typedef std::tuple<Slice,Slice,Slice>    SliceTuple;
+  typedef std::map<Key,DistTuple>          DistMap;
+  typedef std::map<Key,SliceTuple>         SliceMap;
+  typedef std::map<int,HistTuple>          HistMap;         
 } // Data
 
+template<int I>
+int sortComplete(Data::HistMap& hmap,const Data::Slice& slice) {
+  for ( const auto& entry : slice ) { 
+    int   hind(std::get<1>(entry));
+    TH1D* hptr(std::get<0>(entry));
+    if ( hptr != nullptr ) { 
+      auto fmap(hmap.find(hind)); if ( fmap == hmap.end() ) { fmap = hmap.insert( fmap, { hind, { (TH1D*)0, (TH1D*)0, (TH1D*)0 } } ); } 
+      std::get<I>(fmap->second) = hptr; 
+    } 
+  }
+  return static_cast<int>(hmap.size());
+} 
+
+Data::HistMap findHists(const Data::SliceTuple& slices ) { 
+  HistMap hmap; 
+  sortComplete<0>(hmap,std::get<0>(slices)); // EM
+  sortComplete<1>(hmap,std::get<1>(slices)); // LC
+  sortComplete<2>(hmap,std::get<2>(slices)); // ML
+  // analyse map
+  auto fmap(hmap.begin());
+  while ( fmap != fmap.end() ) { 
+    if ( std::get<0>(fmap->second) == nullptr || std::get<1>(fmap->second) == nullptr || std::get<2>(fmap->second) == nullptr ) { fmap = hmap.erase(fmap); } else { ++fmap; }  
+  }
+  //
+  return hmap;
+}
+
 void plotResponseHists(const std::string& fileName) { 
+  // static memory
   static char _buffer[1024];
   // job parameters
   std::string dirName(File::directory(fileName));
@@ -122,65 +164,136 @@ void plotResponseHists(const std::string& fileName) {
   std::string outFileName = File::name(fileName,true)+std::string(".dists.")+File::extension(fileName); 
   TFile* outputFile = File::open(outFileName.c_str(),File::IO::Recreate); 
   if ( outputFile == nullptr ) { return; }
-  // read distributions
+
+  /////////////////////////////////////////
+  // Input: read distributions from file //
+  /////////////////////////////////////////
+
   inputFile->cd(); 
-  std::map<std::string,std::tuple<TH2D*,std::string> > plots;
+  Data::DistMap plots;
+  // retrieve all known distributions
   for ( const auto& entry : knownDists ) {
     // entry
-    const std::string&             name = entry.first;  // name of series (key)
-    const Types::Graph::NameGroup& dist = entry.second; // names of distributions (payload)
-    printf("[plotResponseSummary(fileName=\042%s\042)] INFO loading distributions for plot series %s\n",fileName.c_str(),name.c_str());
+    const std::string&             key   = entry.first;  // name of series (key)
+    const Types::Graph::NameGroup& dists = entry.second; // names of distributions (payload)
+    printf("[plotResponseSummary(fileName=\042%s\042)] INFO loading distributions for plot series %s\n",fileName.c_str(),key.c_str());
     // loop scales
-    for ( const auto& scaleTag : Types::Graph::knownScales ) {
-      // get distribution
-      Types::Graph::Name distName = Types::Graph::findGraph(dist,scaleTag);             // get name from scale tag 
-      TH2D*              distPtr  = Types::Graph::loadGraph<TH2D>(inputFile,distName);  // get distribution
-      // store distribution
-      if ( distPtr != nullptr ) { plots.insert( { distName, { distPtr, String::extractVariable(Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(std::string(distPtr->GetName())),"y"))) } } ); }
-    } // loop in scales
+    Data:::DistTuple distList = { (TH2D*)0, (TH2D*)0, (TH2D*)0 };
+    for ( size_t iscale(0); iscale < Types::Graph::knownScales.size(); ++iscale ) { 
+      switch ( iscale ) { 
+      case 0 : Types::Graph::access<0,DistTuple>(distList) = Types::Graph::loadGraph(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
+      case 1 : Types::Graph::access<1,DistTuple>(distList) = Types::Graph::loadGraph(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
+      case 2 : Types::Graph::access<2,DistTuple>(distList) = Types::Graph::loadGraph(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
+      default: break; 
+    } // loop on scales
+    plots.insert( { key, distList } );
   } // loop on known distributions
   printf("[plotResponseSummary(fileName=\042%s\042)] INFO found %zu distributions in total\n",fileName.c_str(),plots.size()); 
-  // prepare slices
+
+  /////////////////////////
+  // Output: fill slices //
+  /////////////////////////
+
   outputFile->cd();
   int iAxis(2); double minEntries(50.); 
-  std::map<TH2D*,HistUtils::vslice_t> slices; 
-  for ( auto dists : plots ) { 
-    TH2D* distPtr = std::get<0>(dists.second); sprintf(_buffer,"%s_slice",distPtr->GetName()); slices[distPtr] = HistUtils::extract(distPtr,_buffer,iAxis,minEntries); 
+  Data::SliceMap allSlices; TH2D* distPtr = (TH2D*)0; 
+  unsignes int islice(0); 
+  for ( auto dists : plots ) {
+    Data::SliceTuple slices = { Data::Slice(), Data::Slice(), Data::Slice() }; 
+    distPtr = std::get<0>(dists.second); if ( distPtr != nullptr ) { sprintf(_buffer,"%s_slice",distPtr->GetName()); std::get<0>(slices) = HistUtils::extract(distPtr,_buffer,iAxis,minEntries); if ( !std::get<0>(slices).empty() ) { ++islice; } } 
+    distPtr = std::get<1>(dists.second); if ( distPtr != nullptr ) { sprintf(_buffer,"%s_slice",distPtr->GetName()); std::get<1>(slices) = HistUtils::extract(distPtr,_buffer,iAxis,minEntries); if ( !std::get<1>(slices).empty() ) { ++islice; } } 
+    distPtr = std::get<2>(dists.second); if ( distPtr != nullptr ) { sprintf(_buffer,"%s_slice",distPtr->GetName()); std::get<2>(slices) = HistUtils::extract(distPtr,_buffer,iAxis,minEntries); if ( !std::get<2>(slices).empty() ) { ++islice; } } 
+    allSlices.insert( { dists.first, slices } ); 
   }
-  printf("[plotResponseSummary(fileName=\042%s\042)] INFO extracted %zu slices in total\n",fileName.c_str(),slices.size()); 
-  for ( auto& entry : slices ) {
-    // allocate 2-dim distribution and category
-    TH2D* dptr = entry.first;
-    if ( dptr == nullptr ) { continue; }
-    // category and directories
-    std::string dname(dptr->GetName()); 
-    std::string cname(Data::sliceCategories.at(dname));
+  printf("[plotResponseSummary(fileName=\042%s\042)] INFO extracted %zu slices in %zu categories total\n",fileName.c_str(),islice,allSlices.size()); 
+
+  /////////////////
+  // Plot slices //
+  /////////////////
+
+  for ( auto& entry : SliceMap ) {
+    // actual key and values
+    const std::string&      key    = entry.first();
+    const Data::SliceTuple& slices = entry.second();
+    // find reference distributions for evaluation range
+    TH2D* dptr_em = std::get<0>(plots.at(key)); if ( dptr_em == nullptr ) { printf("[plotResponseHists(fileName=\042%s\042)] WARN Key [%s] cannot find reference EM distribution\n",fileName.c_str(),key.c_str()); continue; }
+    TH2D* dptr_lc = std::get<1>(plots.at(key)); if ( dptr_lc == nullptr ) { printf("[plotResponseHists(fileName=\042%s\042)] WARN Key [%s] cannot find reference EM distribution\n",fileName.c_str(),key.c_str()); continue; }
+    TH2D* dptr_ml = std::get<2>(plots.at(key)); if ( dptr_ml == nullptr ) { printf("[plotResponseHists(fileName=\042%s\042)] WARN Key [%s] cannot find reference EM distribution\n",fileName.c_str(),key.c_str()); continue; }
+    // check that slices are all filled
+    Data::HistMap hmap = findHists(slices);
+    if ( hmap.empty() ) { continue; }
+    // global parameters
+    std::string dname(dptr_em->GetName());   // distribution name
+    std::string cname(key);                  // category name
     std::string atitle(String::extractVariable(Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"x"))));
-    std::string utitle(String::extractUnit    (Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"x")))); 
-    std::string xtitle(                        Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"y")) );
+    std::string utitle(String::extractUnit    (atitle); 
+    std::string xtitle(Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"y")));
     std::string ytitle("Entries");
-    if ( cname != "" ) { outputFile->mkdir(cname.c_str(),cname.c_str(),true); outputFile->cd(cname.c_str()); }
-    // plot all slices
-    TCanvas* cvs = new TCanvas(TString::Format("Canvas%s",dname.c_str()).Data(),dname.c_str());
-    for ( auto& content : entry.second ) {
-      TH1D*       hptr  = std::get<0>(content);
-      int         idx   = std::get<1>(content);   
-      if ( hptr != nullptr ) { 
-	if ( Types::Axis::isLog(std::get<1>(Data::plotAxis.at(dptr->GetName()))) ) { cvs->SetLogx(); }
-	if ( Types::Axis::isLog(std::get<0>(Data::plotAxis.at(dptr->GetName()))) ) { cvs->SetLogy(); }
-	hptr->GetXaxis()->SetTitle(xtitle.c_str());
-	hptr->GetYaxis()->SetTitle(ytitle.c_str());
-	std::string lowerLimit(HistUtils::Format::fmtNumber(dptr->GetXaxis()->GetBinLowEdge(idx)));
-	std::string upperLimit(HistUtils::Format::fmtNumber(dptr->GetXaxis()->GetBinUpEdge (idx)));
-	// double xmin(dptr->GetXaxis()->GetBinLowEdge(idx)); double xmax(dptr->GetXaxis()->GetBinUpEdge(idx)); 
-	// new histogram title with boundaries
-	sprintf(_buffer,"Response %s %s < %s < %s %s",lowerLimit.c_str(),utitle.c_str(),atitle.c_str(),upperLimit.c_str(),utitle.c_str());
-	hptr->SetTitle(_buffer); 
-	// draw and save
-	hptr->DrawCopy("hist");	hptr->Write();
-	cvs->Write();
-      } // is valid histogram
-    } // loop histograms in slice
+    // loop complete slices
+    for ( auto fmap(hmap.begin()); fmap != hmap.end(); ++fmap ) { 
+      // parameters
+      std::string lowerLimit(HistUtils::Format::fmtNumber(dptr_em->GetXaxis()->GetBinLowEdge(fmap->first)));
+      std::string upperLimit(HistUtils::Format::fmtNumber(dptr_em->GetXaxis()->GetBinUpEdge (fmap->first)));
+      // data
+      TH1D* hptr_em = std::get<0>(fmap->second); Types::Graph::setDrawStyle<TH1D>(hptr_em,Data::lineStyles.at(Types::Graph::knownScales.at(0))); Types::Graph::setDrawStyle<TH1D>(hptr_em,Data::fillStyles.at(Types::Graph::knownScales.at(0)));  
+      TH1D* hptr_lc = std::get<1>(fmap->second); Types::Graph::setDrawStyle<TH1D>(hptr_lc,Data::lineStyles.at(Types::Graph::knownScales.at(1))); Types::Graph::setDrawStyle<TH1D>(hptr_lc,Data::fillStyles.at(Types::Graph::knownScales.at(1)));  
+      TH1D* hptr_ml = std::get<2>(fmap->second); Types::Graph::setDrawStyle<TH1D>(hptr_ml,Data::lineStyles.at(Types::Graph::knownScales.at(2))); Types::Graph::setDrawStyle<TH1D>(hptr_ml,Data::fillStyles.at(Types::Graph::knownScales.at(2)));
+      std::vector<TH1D*> hists = { hptr_em, hptr_lc, hptr_ml }; 
+      // normalizing
+      sprintf(_buffer,"Response %s %s < %s < %s %s",lowerLimit.c_str(),utitle.c_str(),atitle.c_str(),upperLimit.c_str(),utitle.c_str());
+      double hmax(0.); for ( auto hptr : hists ) { double norm(hists->Integral()); if ( norm != 0. ) { hptr->Scale(1./norm); hptr->SetTitle(_buffer); hptr->GetYaxis()->SetTitle(ytitle.c_str()); hmax = std::max(hmax,hptr->GetMaximum()); } }
+      // plotting
+      sprintf(_buffer,"Category%s_bin_%i",key.c_str(),fmap->first);
+      TCanvas* cvs = new TCanvas(_buffer,_buffer);
+      TH1D* _frame = new TH1D(*hptr_em); 
+      _frame->Reset();
+      _frame->SetMinimum(0.);
+      _frame->SetMaximum(1.1*hmax);
+      _frame->GetXaxis()->SetTitle(xtitle.c_str());
+      _frame->GetYaxis()->SetTitle(ytitle.c_str());
+      _frame->DrawCopy("axis"); 
+      for ( auto hptr : hists ) { hptr->DrawCopy("same hist"); hptr->Write(); }
+      cvs->Write();
+    }
+	    
+
+    
+
+
+
+
+  //   // normalize histograms
+  // } 
+
+
+  // for ( auto& entry : slices ) {
+  //   // allocate 2-dim distribution and category
+  //   TH2D* dptr = entry.first;
+  //   if ( dptr == nullptr ) { continue; }
+  //   // category and directories
+  //   if ( cname != "" ) { outputFile->mkdir(cname.c_str(),cname.c_str(),true); outputFile->cd(cname.c_str()); }
+  //   // plot all slices
+  //   TCanvas* cvs = new TCanvas(TString::Format("Canvas%s",dname.c_str()).Data(),dname.c_str());
+  //   for ( auto& content : entry.second ) {
+  //     TH1D*       hptr  = std::get<0>(content);
+  //     int         idx   = std::get<1>(content);   
+  //     if ( hptr != nullptr ) { 
+  // 	if ( Types::Axis::isLog(std::get<1>(Data::plotAxis.at(dptr->GetName()))) ) { cvs->SetLogx(); }
+  // 	if ( Types::Axis::isLog(std::get<0>(Data::plotAxis.at(dptr->GetName()))) ) { cvs->SetLogy(); }
+  // 	hptr->GetXaxis()->SetTitle(xtitle.c_str());
+  // 	hptr->GetYaxis()->SetTitle(ytitle.c_str());
+  // 	std::string lowerLimit(HistUtils::Format::fmtNumber(dptr->GetXaxis()->GetBinLowEdge(idx)));
+  // 	std::string upperLimit(HistUtils::Format::fmtNumber(dptr->GetXaxis()->GetBinUpEdge (idx)));
+  // 	// double xmin(dptr->GetXaxis()->GetBinLowEdge(idx)); double xmax(dptr->GetXaxis()->GetBinUpEdge(idx)); 
+  // 	// new histogram title with boundaries
+
+  // 	hptr->SetTitle(_buffer); 
+  // 	// draw and save
+  // 	Types::Graph::setDrawStyle<TH1D>(hptr,Data::lineStyles.at
+  // 	hptr->DrawCopy("hist");	hptr->Write();
+  // 	cvs->Write();
+  //     } // is valid histogram
+		       //    } // loop histograms in slice
     outputFile->cd();
   } // loop slices
   // finish
