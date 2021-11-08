@@ -6,6 +6,7 @@
 #include <TGraph.h>
 #include <TFile.h>
 #include <TCanvas.h>
+#include <TError.h>
 
 #include <string>
 #include <tuple>
@@ -151,7 +152,14 @@ namespace Types {
     template<int I,class T> static const typename std::tuple_element<I,T>::type& access(const T& tuple) { return std::get<I>(tuple); } // get graph pointer or name (constant reference)   
     template<int I,class T> static       typename std::tuple_element<I,T>::type& access(      T& tuple) { return std::get<I>(tuple); } // get graph pointer of name (non-const reference)
     // -- accessors: load graph from file into group
-    template<class G> static G*   loadGraph(TFile* dataFile,const std::string& graphName)                    { G* gptr = ( G* )dataFile->FindObjectAny(graphName.c_str()); return gptr; }
+    template<class G> static G* loadGraph(TFile* dataFile,const std::string& graphName) { G* gptr = ( G* )dataFile->FindObjectAny(graphName.c_str()); return gptr; }
+    template<class G> static G* loadGraph(TFile* dataFile,const std::string& dirName,const std::string& graphName) { 
+      G* gptr = ( G* )0;
+      TDirectory* workDir = dataFile->cd(dirName.c_str()) ? TDirectory::CurrentDirectory() : (TDirectory*)0;
+      if ( workDir == nullptr ) { printf("[Types::Graph::loadGraph(...)] WARN directory %s/%s not found, no graph loaded\n",dataFile->GetName(),dirName.c_str()); return gptr; }
+      workDir->GetObject< G >(graphName.c_str(),gptr); 
+      return gptr; 
+    } 
     template<class G> static bool loadGraph(TFile* dataFile,const std::string& graphName,PointerGroup& pgrp,const std::string& scaleTag) {
       // check input
       int idx(scaleIndex(scaleTag)); if ( idx < 0 ) { printf("[Types::Graph::loadGraph(...)] WARN scale tag %s unknown, no graph loaded\n",scaleTag.c_str()); return false; }
@@ -183,6 +191,11 @@ namespace Types {
       case 2 : graphPtr = dynamic_cast< G* >(access<2,PointerGroup>(pgrp)); break;
       default: break;
       }
+      if ( graphPtr != nullptr ) { 
+	printf("[Types::Graph::findGraph(...)] INFO scale tag %s: found graph \042%s\042\n",scaleTag.c_str(),graphPtr->GetName()); 
+      } else { 
+	printf("[Types::Graph::findGraph(...)] INFO scale tag %s: cannot find graph in pointer group\n",scaleTag.c_str()); 
+      }
       return graphPtr; 
     } 
     // -- accessor: find graph name in group
@@ -192,9 +205,9 @@ namespace Types {
       //
       std::string strRef(invalidReturnStringRef);
       switch ( idx ) {
-      case 0 : strRef = access<0,NameGroup>(ngrp); break;
-      case 1 : strRef = access<1,NameGroup>(ngrp); break;
-      case 2 : strRef = access<2,NameGroup>(ngrp); break;
+      case 0 : strRef = access<0,NameGroup>(ngrp); printf("[Types::Graph::findGraph(...)] INFO scale tag %s: found group member #%i with name %s\n",scaleTag.c_str(),idx,strRef.c_str()); break;
+      case 1 : strRef = access<1,NameGroup>(ngrp); printf("[Types::Graph::findGraph(...)] INFO scale tag %s: found group member #%i with name %s\n",scaleTag.c_str(),idx,strRef.c_str()); break;
+      case 2 : strRef = access<2,NameGroup>(ngrp); printf("[Types::Graph::findGraph(...)] INFO scale tag %s: found group member #%i with name %s\n",scaleTag.c_str(),idx,strRef.c_str()); break;
       default: printf("[Types::Graph::findGraph(...)] WARN scale tag %s invalid, no graph found in group\n",scaleTag.c_str()); 
       }
       return strRef; 
@@ -254,6 +267,9 @@ namespace Types {
     template<class H> static void setDrawStyle(H* hptr,const LineDescriptor& ldescr,const FillDescriptor& fdescr,const MarkerDescriptor& mdescr) { 
       setDrawStyle(hptr,ldescr); setDrawStyle(hptr,fdescr); setDrawStyle(hptr,mdescr); 
     }
+    template<class H> static void changeTransparencyFill  (H* hptr,double transparency=1.) { hptr->SetFillColorAlpha  (hptr->GetFillColor()  ,transparency); } 
+    template<class H> static void changeTransparencyLine  (H* hptr,double transparency=1.) { hptr->SetLineColorAlpha  (hptr->GetLineColor()  ,transparency); } 
+    template<class H> static void changeTransparencyMarker(H* hptr,double transparency=1.) { hptr->SetMarkerColorAlpha(hptr->GetMarkerColor(),transparency); } 
   } // Graph
 } // Types
 
@@ -289,12 +305,49 @@ namespace File {
     std::string body = includeDir ? sourceFileName : sourceFileName.substr(0,sourceFileName.find_last_of(separatorDir)); 
     return body.substr(0,body.find_last_of(separatorExt));
   }
-  // -- generate print file names 
+  // -- generate print file name 
   static std::string print(const std::string& fileName,const std::string& ext="pdf",bool includeDir=true) { 
-    static char _buffer[2049];
+    static char _buffer[2048];
     if ( ext == "" ) { return fileName; }
     sprintf(_buffer,"%s.%s",name(fileName,includeDir).c_str(),ext.c_str());    
     return std::string(_buffer); 
+  }
+  // -- generate print file names for various formats
+  static std::vector<std::string> print(const std::string& fileName,const std::vector<std::string>& extensions,bool includeDir=true) { 
+    std::vector<std::string> fnames; for ( const auto& ext : extensions ) { fnames.push_back(print(fileName,ext,includeDir)); }
+    return fnames;
+  }
+  // -- print canvas
+  static std::string print(const std::string& fileName,TCanvas* pcvs,const std::string& ext="pdf",bool includeDir=true) {
+    auto ignoreLvl = gErrorIgnoreLevel; gErrorIgnoreLevel = kWarning;
+    std::string fname(print(fileName,ext,includeDir));
+    pcvs->Print(fname.c_str()); 
+    gErrorIgnoreLevel = ignoreLvl;
+    return fileName;
+  }
+  // -- print canvas in various formats
+  static std::vector<std::string> print(const std::string& fileName,TCanvas* pcvs,const std::vector<std::string>& extensions,bool includeDir=true) { 
+    auto ignoreLvl = gErrorIgnoreLevel; gErrorIgnoreLevel = kWarning;
+    std::vector<std::string> fnames; 
+    for ( const auto& ext : extensions ) { fnames.push_back(print(fileName,ext,includeDir)); pcvs->Print(fnames.back().c_str()); }
+    gErrorIgnoreLevel = ignoreLvl;
+    return fnames; 
+  }
+  // -- print canvas
+  static std::string print(TCanvas* pcvs,const std::string& ext="pdf",bool includeDir=true) {
+    auto ignoreLvl = gErrorIgnoreLevel; gErrorIgnoreLevel = kWarning;
+    std::string fileName(print(pcvs->GetName(),ext,includeDir));
+    pcvs->Print(fileName.c_str()); 
+    gErrorIgnoreLevel = ignoreLvl;
+    return fileName;
+  }
+  // -- print canvas in various formats
+  static std::vector<std::string> print(TCanvas* pcvs,const std::vector<std::string>& extensions,bool includeDir=true) { 
+    auto ignoreLvl = gErrorIgnoreLevel; gErrorIgnoreLevel = kWarning;
+    std::vector<std::string> fnames; 
+    for ( const auto& ext : extensions ) { fnames.push_back(print(pcvs->GetName(),ext,includeDir)); pcvs->Print(fnames.back().c_str()); }
+    gErrorIgnoreLevel = ignoreLvl;
+    return fnames; 
   }
 } // File
 
@@ -310,6 +363,43 @@ namespace String {
     // return value between []
     return varStr.substr(fbegin+1,fend-fbegin-1);
   }
+  static std::string stripFront(const std::string& varStr,const char stripChar=' ') { return varStr.length() > 0 ? varStr.substr(varStr.find_first_not_of(stripChar))                              : varStr; }
+  static std::string stripBack (const std::string& varStr,const char stripChar=' ') { return varStr.length() > 0 ? varStr.substr(0,std::min(varStr.length(),varStr.find_last_not_of(stripChar)+1)) : varStr; }
+  static std::string strip     (const std::string& varStr,const char stripChar=' ') { return varStr.length() > 0 ? stripFront(stripBack(varStr,stripChar),stripChar)                               : varStr; }
+  // remove fragments
+  static std::string remove(const std::string& varStr,const std::string& remStr) { 
+    // check if string fragment is in string
+    std::string::size_type frem = varStr.find(remStr);
+    if ( frem == std::string::npos ) { return varStr; }
+    // replace by empty string
+    std::string::size_type lrem(remStr.length()); 
+    std::string rstr(varStr); rstr.replace(frem,lrem,""); 
+    return rstr; 
+  }
+  static std::string remove(const std::string& varStr,const std::vector<std::string>& remList ) { 
+    std::string rstr(varStr);
+    for ( const auto& remStr : remList ) { rstr = remove(rstr,remStr); }
+    return rstr;
+  }
+  // replace characters
+  static std::string replace(const std::string& varStr,const char c,char r='_') {
+    std::string rstr(varStr); 
+    std::string::size_type fchar = rstr.find_first_of(c,0);
+    while ( fchar != std::string::npos ) { rstr[fchar] = r; fchar = rstr.find_first_of(c,fchar); }
+    return rstr; 
+  }
+  static std::string replace(const std::string& varStr,const std::string& cstr,char r='_') { 
+    std::string rstr(varStr); 
+    std::string::size_type fchar = rstr.find(cstr,0);
+    while ( fchar != std::string::npos ) { rstr[fchar] = r; fchar = rstr.find_first_of(cstr,fchar); }
+    return rstr; 
+  } 
+  static std::string replace(const std::string& varStr,const std::vector<char>& cvec,char r='_') { 
+    std::string rstr(varStr); 
+    for ( auto c : cvec ) { rstr = replace(rstr,c,r); }
+    return rstr; 
+  } 
+ 
 } // String
 
 #endif

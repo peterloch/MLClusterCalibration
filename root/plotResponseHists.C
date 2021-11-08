@@ -1,8 +1,14 @@
 
+#include <TError.h>
+#include <TSystem.h>
+#include <TStyle.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TFile.h>
 #include <TCanvas.h>
+#include <TLatex.h>
+#include <TLegend.h>
+#include <TLegendEntry.h>
 
 #include "HistUtils.h"
 #include "PlotConfig.h"
@@ -11,34 +17,41 @@
 #include <map>
 #include <tuple>
 #include <vector>
+#include <iterator>
+
+#include <chrono>
 
 #include <cstdio>
 #include <cmath>
+#include <ctime>
+
+#include <iostream>
+#include <fstream>
 
 namespace Data {
   namespace Jet  {
     static const Types::Graph::NameGroupMap knownDists = { 
-      { "ResponseEdep", { "EMR_Edep_incl", "LCR_Edep_incl", "MLR_Edep_incl" } },
-      { "ResponseEfrc", { "EMR_Efrc_incl", "LCR_Efrc_incl", "MLR_Efrc_incl" } },
-      { "Responselamb", { "EMR_lamb_incl", "LCR_lamb_incl", "MLR_lamb_incl" } },
-      { "Responselat_", { "EMR_lat__incl", "LCR_lat__incl", "MLR_lat__incl" } },
-      { "Responselong", { "EMR_long_incl", "LCR_long_incl", "MLR_long_incl" } },
-      { "Responseptd_", { "EMR_ptd__incl", "LCR_ptd__incl", "MLR_ptd__incl" } },
-      { "Responserho_", { "EMR_rho__incl", "LCR_rho__incl", "MLR_rho__incl" } },
-      { "Responsesign", { "EMR_sign_incl", "LCR_sign_incl", "MLR_sign_incl" } },
-      { "Responsetime", { "EMR_time_incl", "LCR_time_incl", "MLR_time_incl" } }
+      { "ResponseEdep"        , { "EMR_Edep_incl", "LCR_Edep_incl", "MLR_Edep_incl" } },
+      { "ResponseEfrc"        , { "EMR_Efrc_incl", "LCR_Efrc_incl", "MLR_Efrc_incl" } },
+      { "ResponseLambda"      , { "EMR_lamb_incl", "LCR_lamb_incl", "MLR_lamb_incl" } },
+      { "ResponseLateral"     , { "EMR_lat__incl", "LCR_lat__incl", "MLR_lat__incl" } },
+      { "ResponseLongitudinal", { "EMR_long_incl", "LCR_long_incl", "MLR_long_incl" } },
+      { "ResponsePtD"         , { "EMR_ptd__incl", "LCR_ptd__incl", "MLR_ptd__incl" } },
+      { "ResponseRho"         , { "EMR_rho__incl", "LCR_rho__incl", "MLR_rho__incl" } },
+      { "ResponseSignificance", { "EMR_sign_incl", "LCR_sign_incl", "MLR_sign_incl" } },
+      { "ResponseTime"        , { "EMR_time_incl", "LCR_time_incl", "MLR_time_incl" } }
     }; 
   }
   namespace Pion { 
     static const Types::Graph::NameGroupMap knownDists = { 
-      { "ResponseEdep", { "EMR_Edep_incl", "LCR_Edep_incl", "MLR_Edep_incl" } },
-      { "Responselamb", { "EMR_lamb_incl", "LCR_lamb_incl", "MLR_lamb_incl" } },
-      { "Responselat_", { "EMR_lat__incl", "LCR_lat__incl", "MLR_lat__incl" } },
-      { "Responselong", { "EMR_long_incl", "LCR_long_incl", "MLR_long_incl" } },
-      { "Responseptd_", { "EMR_ptd__incl", "LCR_ptd__incl", "MLR_ptd__incl" } },
-      { "Responserho_", { "EMR_rho__incl", "LCR_rho__incl", "MLR_rho__incl" } },
-      { "Responsesign", { "EMR_sign_incl", "LCR_sign_incl", "MLR_sign_incl" } },
-      { "Responsetime", { "EMR_time_incl", "LCR_time_incl", "MLR_time_incl" } }
+      { "ResponseEdep"        , { "EMR_Edep_incl", "LCR_Edep_incl", "MLR_Edep_incl" } },
+      { "ResponseLambda"      , { "EMR_lamb_incl", "LCR_lamb_incl", "MLR_lamb_incl" } },
+      { "ResponseLateral"     , { "EMR_lat__incl", "LCR_lat__incl", "MLR_lat__incl" } },
+      { "ResponseLongitudinal", { "EMR_long_incl", "LCR_long_incl", "MLR_long_incl" } },
+      { "ResponsePtD"         , { "EMR_ptd__incl", "LCR_ptd__incl", "MLR_ptd__incl" } },
+      { "ResponseRho"         , { "EMR_rho__incl", "LCR_rho__incl", "MLR_rho__incl" } },
+      { "ResponseSignificance", { "EMR_sign_incl", "LCR_sign_incl", "MLR_sign_incl" } },
+      { "ResponseTime"        , { "EMR_time_incl", "LCR_time_incl", "MLR_time_incl" } }
     }; 
   }
   static const std::map<std::string,std::string> sliceCategories = { 
@@ -137,26 +150,27 @@ int sortComplete(Data::HistMap& hmap,const Data::Slice& slice) {
 } 
 
 Data::HistMap findHists(const Data::SliceTuple& slices ) { 
-  HistMap hmap; 
+  Data::HistMap hmap; 
   sortComplete<0>(hmap,std::get<0>(slices)); // EM
   sortComplete<1>(hmap,std::get<1>(slices)); // LC
   sortComplete<2>(hmap,std::get<2>(slices)); // ML
   // analyse map
   auto fmap(hmap.begin());
-  while ( fmap != fmap.end() ) { 
+  while ( fmap != hmap.end() ) { 
     if ( std::get<0>(fmap->second) == nullptr || std::get<1>(fmap->second) == nullptr || std::get<2>(fmap->second) == nullptr ) { fmap = hmap.erase(fmap); } else { ++fmap; }  
   }
   //
   return hmap;
 }
 
-void plotResponseHists(const std::string& fileName) { 
+void plotResponseHists(const std::string& fileName,const std::string& dirName,bool isBatch=false) { 
   // static memory
   static char _buffer[1024];
   // job parameters
-  std::string dirName(File::directory(fileName));
+  // std::string dirName(File::directory(fileName));
   bool doJets(fileName.find("jet") != std::string::npos);
   const Types::Graph::NameGroupMap& knownDists = doJets ? Data::Jet::knownDists : Data::Pion::knownDists;
+  gErrorIgnoreLevel = kWarning;
   // open file
   TFile* inputFile = File::open(fileName,File::IO::Read); 
   if ( inputFile == nullptr ) { return; }
@@ -176,19 +190,37 @@ void plotResponseHists(const std::string& fileName) {
     // entry
     const std::string&             key   = entry.first;  // name of series (key)
     const Types::Graph::NameGroup& dists = entry.second; // names of distributions (payload)
-    printf("[plotResponseSummary(fileName=\042%s\042)] INFO loading distributions for plot series %s\n",fileName.c_str(),key.c_str());
+    printf("[plotResponseHists(fileName=\042%s\042)] INFO loading distributions for plot series %s\n",fileName.c_str(),key.c_str());
     // loop scales
-    Data:::DistTuple distList = { (TH2D*)0, (TH2D*)0, (TH2D*)0 };
+    Data::DistTuple distList = { (TH2D*)0, (TH2D*)0, (TH2D*)0 };
     for ( size_t iscale(0); iscale < Types::Graph::knownScales.size(); ++iscale ) { 
       switch ( iscale ) { 
-      case 0 : Types::Graph::access<0,DistTuple>(distList) = Types::Graph::loadGraph(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
-      case 1 : Types::Graph::access<1,DistTuple>(distList) = Types::Graph::loadGraph(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
-      case 2 : Types::Graph::access<2,DistTuple>(distList) = Types::Graph::loadGraph(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
+      case 0 : Types::Graph::access<0,Data::DistTuple>(distList) = Types::Graph::loadGraph<TH2D>(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
+      case 1 : Types::Graph::access<1,Data::DistTuple>(distList) = Types::Graph::loadGraph<TH2D>(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
+      case 2 : Types::Graph::access<2,Data::DistTuple>(distList) = Types::Graph::loadGraph<TH2D>(inputFile,Types::Graph::findGraph(dists,Types::Graph::knownScales.at(iscale))); break;
       default: break; 
+      } // scale switches
     } // loop on scales
     plots.insert( { key, distList } );
-  } // loop on known distributions
-  printf("[plotResponseSummary(fileName=\042%s\042)] INFO found %zu distributions in total\n",fileName.c_str(),plots.size()); 
+    printf("[[plotResponseHists(fileName=\042%s\042)] DEBG [%zu] added 2-dim distributions\n",fileName.c_str(),3*plots.size());
+  } // loop on know distributions
+  printf("[plotResponseHists(fileName=\042%s\042)] INFO found %zu 2-dim distributions in total\n",fileName.c_str(),plots.size());
+  std::string invalidPtr = "<null> pointer";
+  std::string::size_type lm(invalidPtr.length());
+  std::string::size_type lk(0);
+  for ( const auto& entry : plots ) { 
+    lk = std::max(lk,entry.first.length());
+    if ( std::get<0>(entry.second) != nullptr && std::get<1>(entry.second) != nullptr && std::get<2>(entry.second) != nullptr ) { 
+      lm = std::max( { lm, std::string(std::get<0>(entry.second)->GetName()).length(),std::string(std::get<1>(entry.second)->GetName()).length(),std::string(std::get<2>(entry.second)->GetName()).length() } );
+    } 
+  }
+  for ( const auto& entry : plots ) { 
+    printf("[plotResponseHists(fileName=\042%s\042)] INFO key: %-*.*s - found 2-dim distributions",fileName.c_str(),(int)lk,(int)lk,entry.first.c_str());
+    if ( std::get<0>(entry.second) != nullptr ) { printf(" %-*.*s",(int)lm,(int)lm,std::get<0>(entry.second)->GetName()); } else { printf(" %-*.*s",(int)lm,(int)lm,invalidPtr.c_str()); }
+    if ( std::get<1>(entry.second) != nullptr ) { printf(" %-*.*s",(int)lm,(int)lm,std::get<1>(entry.second)->GetName()); } else { printf(" %-*.*s",(int)lm,(int)lm,invalidPtr.c_str()); }
+    if ( std::get<2>(entry.second) != nullptr ) { printf(" %-*.*s",(int)lm,(int)lm,std::get<2>(entry.second)->GetName()); } else { printf(" %-*.*s",(int)lm,(int)lm,invalidPtr.c_str()); }
+    printf("\n"); std::cout << std::flush;
+  }
 
   /////////////////////////
   // Output: fill slices //
@@ -197,7 +229,7 @@ void plotResponseHists(const std::string& fileName) {
   outputFile->cd();
   int iAxis(2); double minEntries(50.); 
   Data::SliceMap allSlices; TH2D* distPtr = (TH2D*)0; 
-  unsignes int islice(0); 
+  unsigned int islice(0); 
   for ( auto dists : plots ) {
     Data::SliceTuple slices = { Data::Slice(), Data::Slice(), Data::Slice() }; 
     distPtr = std::get<0>(dists.second); if ( distPtr != nullptr ) { sprintf(_buffer,"%s_slice",distPtr->GetName()); std::get<0>(slices) = HistUtils::extract(distPtr,_buffer,iAxis,minEntries); if ( !std::get<0>(slices).empty() ) { ++islice; } } 
@@ -205,31 +237,51 @@ void plotResponseHists(const std::string& fileName) {
     distPtr = std::get<2>(dists.second); if ( distPtr != nullptr ) { sprintf(_buffer,"%s_slice",distPtr->GetName()); std::get<2>(slices) = HistUtils::extract(distPtr,_buffer,iAxis,minEntries); if ( !std::get<2>(slices).empty() ) { ++islice; } } 
     allSlices.insert( { dists.first, slices } ); 
   }
-  printf("[plotResponseSummary(fileName=\042%s\042)] INFO extracted %zu slices in %zu categories total\n",fileName.c_str(),islice,allSlices.size()); 
+  printf("[plotResponseHists(fileName=\042%s\042)] INFO extracted %u slices in %zu categories total\n",fileName.c_str(),islice,allSlices.size()); 
 
   /////////////////
   // Plot slices //
   /////////////////
 
-  for ( auto& entry : SliceMap ) {
+  // descriptive text
+  TLatex tl;
+  double normalSize(tl.GetTextSize()); 
+  double titleSize(0.75*normalSize);
+  double smallSize(0.50*normalSize); 
+  tl.SetTextSize(titleSize);
+  tl.SetNDC();
+  tl.SetTextAlign(13);
+  double tx(gStyle->GetPadLeftMargin()+0.04);
+  double ty(1-(gStyle->GetPadTopMargin()+0.04));
+
+  // plot all slices in all categories stored in the map 
+  std::vector<std::string> printFiles; printFiles.reserve(100000); 
+  for ( auto& entry : allSlices ) {
     // actual key and values
-    const std::string&      key    = entry.first();
-    const Data::SliceTuple& slices = entry.second();
+    const std::string&      key    = entry.first;
+    const Data::SliceTuple& slices = entry.second;
+    // change/create directory
+    outputFile->cd();
+    auto thisDir = outputFile->mkdir(key.c_str(),key.c_str(),true); thisDir->cd(); 
+    printf("[plotResponseHists(fileName=\042%s\042)] INFO changed to directory %s/%s\n",inputFile->GetName(),outputFile->GetName(),thisDir->GetName()); 
     // find reference distributions for evaluation range
     TH2D* dptr_em = std::get<0>(plots.at(key)); if ( dptr_em == nullptr ) { printf("[plotResponseHists(fileName=\042%s\042)] WARN Key [%s] cannot find reference EM distribution\n",fileName.c_str(),key.c_str()); continue; }
     TH2D* dptr_lc = std::get<1>(plots.at(key)); if ( dptr_lc == nullptr ) { printf("[plotResponseHists(fileName=\042%s\042)] WARN Key [%s] cannot find reference EM distribution\n",fileName.c_str(),key.c_str()); continue; }
     TH2D* dptr_ml = std::get<2>(plots.at(key)); if ( dptr_ml == nullptr ) { printf("[plotResponseHists(fileName=\042%s\042)] WARN Key [%s] cannot find reference EM distribution\n",fileName.c_str(),key.c_str()); continue; }
+    dptr_em->Write();
+    dptr_lc->Write();
+    dptr_ml->Write();
     // check that slices are all filled
     Data::HistMap hmap = findHists(slices);
     if ( hmap.empty() ) { continue; }
     // global parameters
     std::string dname(dptr_em->GetName());   // distribution name
     std::string cname(key);                  // category name
-    std::string atitle(String::extractVariable(Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"x"))));
-    std::string utitle(String::extractUnit    (atitle); 
+    std::string atitle(String::strip(String::extractVariable(Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"x")))));
+    std::string utitle(String::strip(String::extractUnit    (Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"x"))))); 
     std::string xtitle(Types::Axis::title(Data::plotAxisDescr(Data::plotAxis.find(dname),"y")));
     std::string ytitle("Entries");
-    // loop complete slices
+    // plot all complete slices for this category
     for ( auto fmap(hmap.begin()); fmap != hmap.end(); ++fmap ) { 
       // parameters
       std::string lowerLimit(HistUtils::Format::fmtNumber(dptr_em->GetXaxis()->GetBinLowEdge(fmap->first)));
@@ -240,9 +292,9 @@ void plotResponseHists(const std::string& fileName) {
       TH1D* hptr_ml = std::get<2>(fmap->second); Types::Graph::setDrawStyle<TH1D>(hptr_ml,Data::lineStyles.at(Types::Graph::knownScales.at(2))); Types::Graph::setDrawStyle<TH1D>(hptr_ml,Data::fillStyles.at(Types::Graph::knownScales.at(2)));
       std::vector<TH1D*> hists = { hptr_em, hptr_lc, hptr_ml }; 
       // normalizing
-      sprintf(_buffer,"Response %s %s < %s < %s %s",lowerLimit.c_str(),utitle.c_str(),atitle.c_str(),upperLimit.c_str(),utitle.c_str());
-      double hmax(0.); for ( auto hptr : hists ) { double norm(hists->Integral()); if ( norm != 0. ) { hptr->Scale(1./norm); hptr->SetTitle(_buffer); hptr->GetYaxis()->SetTitle(ytitle.c_str()); hmax = std::max(hmax,hptr->GetMaximum()); } }
-      // plotting
+      sprintf(_buffer,"%s %s < %s < %s %s",lowerLimit.c_str(),utitle.c_str(),atitle.c_str(),upperLimit.c_str(),utitle.c_str());
+      double hmax(0.); for ( auto hptr : hists ) { double norm(hptr->Integral()); if ( norm != 0. ) { hptr->Scale(1./norm); hptr->SetTitle(_buffer); hptr->GetYaxis()->SetTitle(ytitle.c_str()); hmax = std::max(hmax,hptr->GetMaximum()); } }
+      // plotting histograms
       sprintf(_buffer,"Category%s_bin_%i",key.c_str(),fmap->first);
       TCanvas* cvs = new TCanvas(_buffer,_buffer);
       TH1D* _frame = new TH1D(*hptr_em); 
@@ -253,49 +305,58 @@ void plotResponseHists(const std::string& fileName) {
       _frame->GetYaxis()->SetTitle(ytitle.c_str());
       _frame->DrawCopy("axis"); 
       for ( auto hptr : hists ) { hptr->DrawCopy("same hist"); hptr->Write(); }
+      // descriptive text
+      sprintf(_buffer,"%s",hists.front()->GetTitle());
+      tl.SetTextSize(titleSize); tl.DrawLatex(tx,ty     ,"#font[72]{ATLAS} Simulation Internal"              ); 
+      tl.SetTextSize(smallSize); tl.DrawLatex(tx,ty-0.06,"Anti-k_{t} R = 0.4 LCTopo jets (MC16d JZ2W)"       );
+      tl.SetTextSize(smallSize); tl.DrawLatex(tx,ty-0.10,"p_{T,jet}^{LCJES} > 20 GeV |y_{jet}^{LCJES}| < 0,4");
+      tl.SetTextSize(smallSize); tl.DrawLatex(tx,ty-0.15,"Topo-cluster response"                             );
+      tl.SetTextSize(smallSize); tl.DrawLatex(tx,ty-0.18,_buffer                                             );
+      // legend
+      TLegend* lptr = new TLegend(tx,ty-0.25,tx+0.15,ty-0.4,"","NDC");
+      lptr->SetBorderSize(0); 
+      TLegendEntry* eptr_em = lptr->AddEntry(hptr_em,"EM response" ,"lf"); eptr_em->SetTextFont(42);
+      TLegendEntry* eptr_lc = lptr->AddEntry(hptr_lc,"LCW response","lf"); eptr_lc->SetTextFont(42);
+      TLegendEntry* eptr_ml = lptr->AddEntry(hptr_ml,"ML response" ,"lf"); eptr_ml->SetTextFont(42);
+      lptr->Draw("same");
+      // save canvas
       cvs->Write();
-    }
-	    
+      // print canvas
+      if ( dirName.length() > 0 ) { sprintf(_buffer,"%s/%s",dirName.c_str(),cvs->GetName()); } else { sprintf(_buffer,"./%s",cvs->GetName()); }
+      std::vector<std::string> pfiles = File::print(_buffer,cvs,std::vector<std::string>({"pdf","png"}));
+      printFiles.insert(printFiles.end(),pfiles.begin(),pfiles.end());
+      // break point
+      if ( !isBatch ) { 
+	gSystem->ProcessEvents();
+	std::cout << "(push key to continue, q/Q -> quit: ";
+	int c=getchar();
+	if ( c == 'q' || c == 'Q' ) { std::cout << std::endl; outputFile->Close(); return; }
+      }
+    } // slices
+  } // slice map
 
-    
+  ////////////////
+  // Finalizing //
+  ////////////////
 
+  // get time stamp
+  std::time_t tnow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::string strNow(ctime(&tnow));
+  std::cout << strNow << std::endl;
+  strNow =String::strip(String::remove(strNow,{ "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }),' ');
+  // std::cout << strNow << std::endl;
+  // strNow = String::replace(strNow,' ','_');
+  std::cout << strNow << std::endl;
+  // strNow = String::replace(strNow,' ','_');
+  std::vector<char> forbidden( { ' ',':',',','!','?','+','-','*','#','@','&','^','%','$' } );
+  strNow = String::replace(strNow,forbidden,'_');
+  std::cout << strNow << std::endl;
+  sprintf(_buffer,"Report.%s.log",strNow.c_str());
 
-
-
-  //   // normalize histograms
-  // } 
-
-
-  // for ( auto& entry : slices ) {
-  //   // allocate 2-dim distribution and category
-  //   TH2D* dptr = entry.first;
-  //   if ( dptr == nullptr ) { continue; }
-  //   // category and directories
-  //   if ( cname != "" ) { outputFile->mkdir(cname.c_str(),cname.c_str(),true); outputFile->cd(cname.c_str()); }
-  //   // plot all slices
-  //   TCanvas* cvs = new TCanvas(TString::Format("Canvas%s",dname.c_str()).Data(),dname.c_str());
-  //   for ( auto& content : entry.second ) {
-  //     TH1D*       hptr  = std::get<0>(content);
-  //     int         idx   = std::get<1>(content);   
-  //     if ( hptr != nullptr ) { 
-  // 	if ( Types::Axis::isLog(std::get<1>(Data::plotAxis.at(dptr->GetName()))) ) { cvs->SetLogx(); }
-  // 	if ( Types::Axis::isLog(std::get<0>(Data::plotAxis.at(dptr->GetName()))) ) { cvs->SetLogy(); }
-  // 	hptr->GetXaxis()->SetTitle(xtitle.c_str());
-  // 	hptr->GetYaxis()->SetTitle(ytitle.c_str());
-  // 	std::string lowerLimit(HistUtils::Format::fmtNumber(dptr->GetXaxis()->GetBinLowEdge(idx)));
-  // 	std::string upperLimit(HistUtils::Format::fmtNumber(dptr->GetXaxis()->GetBinUpEdge (idx)));
-  // 	// double xmin(dptr->GetXaxis()->GetBinLowEdge(idx)); double xmax(dptr->GetXaxis()->GetBinUpEdge(idx)); 
-  // 	// new histogram title with boundaries
-
-  // 	hptr->SetTitle(_buffer); 
-  // 	// draw and save
-  // 	Types::Graph::setDrawStyle<TH1D>(hptr,Data::lineStyles.at
-  // 	hptr->DrawCopy("hist");	hptr->Write();
-  // 	cvs->Write();
-  //     } // is valid histogram
-		       //    } // loop histograms in slice
-    outputFile->cd();
-  } // loop slices
+  printf("[plotResponseHists(fileName=\042%s\042)] INFO full listof  %zu plots in file \042%s\042\n",fileName.c_str(),printFiles.size(),_buffer);
+  std::ofstream messageStream(_buffer);
+  std::copy(printFiles.begin(),printFiles.end(),std::ostream_iterator<std::string>(messageStream,"\n")); 
+  messageStream.close();
   // finish
   outputFile->Close();
 }

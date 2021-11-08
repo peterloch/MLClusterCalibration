@@ -300,12 +300,12 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
    d_ml_resp_ptd__e300 = Hist::book<TH2D>("MLR_ptd__e300","ML  response vs PtD EclusDep>300 MeV",102,-0.1,1.1,n_bins,ymin,ymax,"P_{t}D","E_{clus}^{ML}/E_{clus}^{dep}" );
 
    // -- evaluation scale: second moment of time
-   d_em_resp_time_incl = Hist::book<TH2D>("EMR_time_incl","EM  response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
-   d_lc_resp_time_incl = Hist::book<TH2D>("LCR_time_incl","LCW response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
-   d_ml_resp_time_incl = Hist::book<TH2D>("MLR_time_incl","ML  response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
-   d_em_resp_time_e300 = Hist::book<TH2D>("EMR_time_e300","EM  response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
-   d_lc_resp_time_e300 = Hist::book<TH2D>("LCR_time_e300","LCW response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
-   d_ml_resp_time_e300 = Hist::book<TH2D>("MLR_time_e300","ML  response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t}^{2} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_time_incl = Hist::book<TH2D>("EMR_time_incl","EM  response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_time_incl = Hist::book<TH2D>("LCR_time_incl","LCW response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_time_incl = Hist::book<TH2D>("MLR_time_incl","ML  response vs SigmaTime2 (inclusive)",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
+   d_em_resp_time_e300 = Hist::book<TH2D>("EMR_time_e300","EM  response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t} [ns]","E_{clus}^{EM}/E_{clus}^{dep}" );
+   d_lc_resp_time_e300 = Hist::book<TH2D>("LCR_time_e300","LCW response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t} [ns]","E_{clus}^{LCW}/E_{clus}^{dep}");
+   d_ml_resp_time_e300 = Hist::book<TH2D>("MLR_time_e300","ML  response vs SigmaTime2 EclusDep>300 MeV",125,-0.025,9.975,n_bins,ymin,ymax,"#sigma_{t} [ns]","E_{clus}^{ML}/E_{clus}^{dep}" );
 
    printf("[ClusterTreePlotter::Loop()] INFO looking for PDG ID %.0f\n",pdgID);
    // -- loop tuple
@@ -319,16 +319,16 @@ void ClusterTreePlotter::Loop(double pdgID,bool absVal)
       // cluster selection by particle or jet
       if ( !filter(ParticleScale::TRUTH) || !filter(JetScale::LCJES) ) { continue; } 
       kentry++;
-      std::cout << "**** passed particle/jet filter " << kentry << "/" << nentries << std::endl;
+      //      std::cout << "**** passed particle/jet filter " << kentry << "/" << nentries << std::endl;
       fillParticle(true); 
       fillJet(true); 
       // cluster selection by cluster
       if ( !filter(ClusterScale::TRUTH) || !filter(ClusterScale::LCW) ) { continue; }
-      std::cout << "**** passed cluster filter (1) " << kentry << "/" << nentries << std::endl;
+      // std::cout << "**** passed cluster filter (1) " << kentry << "/" << nentries << std::endl;
       double edep(0.); 
       if ( !fillValue<double>(ValueType::E,(uint_t)ClusterScale::TRUTH,edep) ) { continue; }
       lentry++;
-      std::cout << "**** passed cluster filter (2) " << lentry << "/" << nentries << std::endl;
+      //  std::cout << "**** passed cluster filter (2) " << lentry << "/" << nentries << std::endl;
       // collect signals
       double eem   (clusterE); 
       double elcw  (cluster_HAD_WEIGHT*eem); 

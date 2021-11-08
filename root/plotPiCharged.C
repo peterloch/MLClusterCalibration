@@ -2,7 +2,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "ClusterTreePionPlotter.C"
+#include "ClusterTreePlotter.C"
 
 #include <string>
 
@@ -13,7 +13,7 @@ void plotPiCharged() {
   if ( f != nullptr ) { 
     TTree* t = (TTree*)f->FindObjectAny("ClusterTree"); 
     if ( t == nullptr ) { return; } 
-    ClusterTreePionPlotter* pl = new ClusterTreePionPlotter(t);
+    ClusterTreePlotter* pl = new ClusterTreePlotter(t);
     pl->Loop(pdgId,true); 
   }
 }
