@@ -118,7 +118,7 @@ namespace HistUtils {
   static bool stats(TH1D* h,double& m,double& dl,double& dh,Stats s=Mean,const std::string& opt="RMS")
   {
     static const std::vector<std::string> _knownOpts = { "ERROR", "RMS" };
-    // check optoins
+    // check options
     if ( std::find(_knownOpts.begin(),_knownOpts.end(),opt) == _knownOpts.end() ) { 
       printf("[HistUtils::stats(...)] ERROR unknown option \042%s\042, use \042ERROR\042 or \042RMS\042\n",opt.c_str());
       return false;
@@ -163,7 +163,7 @@ namespace HistUtils {
       }
       if ( wh > 0. ) { 
 	dh = TMath::Sqrt(TMath::Abs(dh)/wh);
-	if ( opt == "ERROR" ) { dl /= TMath::Sqrt(wh); }
+	if ( opt == "ERROR" ) { dh /= TMath::Sqrt(wh); }
       } else { 
 	dh = 0.; 
       }
@@ -177,9 +177,11 @@ namespace HistUtils {
 
   // Returns vector filled with valid pointers to TH1D histogram objects. 
   // Needs a name and an axis indicator (1 - x,2 - y) for the projections.
-  static std::vector<std::tuple<TH1D*,int> > extract(TH2D* d,const std::string& name,int alongAxis,double minEntries=-1.)
+  typedef std::tuple<TH1D*,int> slice_t;
+  typedef std::vector<slice_t>  vslice_t;
+  static vslice_t extract(TH2D* d,const std::string& name,int alongAxis,double minEntries=-1.)
   {
-    std::vector<std::tuple<TH1D*,int> > hists;
+    vslice_t hists;
     // projection along x axis 
     if ( alongAxis == 1 ) {
       //     printf("HistUtils::extract() loop %i projections\n",d->GetNbinsY());
@@ -242,7 +244,7 @@ namespace HistUtils {
 	for ( size_t i(0); i<hists.size(); ++i ) { 
 	  stats(std::get<0>(hists.at(i)),y[i],dyl[i],dyh[i],s,opt);
 	  x[i]   = d->GetYaxis()->GetBinCenter(std::get<1>(hists.at(i)));
-	  dxl[i] = d->GetYaxis()->GetBinWidth (std::get<1>(hists.at(i)));
+	  dxl[i] = d->GetYaxis()->GetBinWidth (std::get<1>(hists.at(i)))/2.;
 	  dxh[i] = dxl[i];
 	} 
 	gptr = new TGraphAsymmErrors((int)hists.size(),&x[0],&y[0],&dxl[0],&dxh[0],&dyl[0],&dyh[0]);
@@ -258,7 +260,7 @@ namespace HistUtils {
 	for ( size_t i(0); i<hists.size(); ++i ) { 
 	  stats(std::get<0>(hists.at(i)),y[i],dyl[i],dyh[i],s,opt);
 	  x[i]   = d->GetXaxis()->GetBinCenter(std::get<1>(hists.at(i)));
-	  dxl[i] = d->GetXaxis()->GetBinWidth (std::get<1>(hists.at(i)));
+	  dxl[i] = d->GetXaxis()->GetBinWidth (std::get<1>(hists.at(i)))/2.;
 	  dxh[i] = dxl[i];
 	} 
 	gptr = new TGraphAsymmErrors((int)hists.size(),&x[0],&y[0],&dxl[0],&dxh[0],&dyl[0],&dyh[0]);
@@ -409,5 +411,94 @@ namespace HistUtils {
       if ( i % 2 == 0 ) { tl.DrawLatex(xt,yt,_calos.at(i-1).c_str()); } else { tl.DrawLatex(xt,ty,_calos.at(i-1).c_str()); }
     }
   }
-}
+
+  ////////////
+  // Colors //
+  ////////////
+
+  namespace Color {
+    constexpr int blue    = kBlue; 
+    constexpr int red     = kRed; 
+    constexpr int green   = kGreen;
+    constexpr int black   = kBlack;
+    constexpr int white   = kWhite;
+    constexpr int grey    = kGray; 
+    constexpr int pink    = kPink; 
+    constexpr int magenta = kMagenta;
+    constexpr int violet  = kViolet; 
+    constexpr int orange  = kOrange; 
+    constexpr int spring  = kSpring; 
+    constexpr int teal    = kTeal;
+    constexpr int cyan    = kCyan; 
+    constexpr int azure   = kAzure; 
+    constexpr int yellow  = kYellow; 
+    constexpr int brown   = red+4; 
+    namespace Light { 
+      constexpr int blue    = kBlue-10; 
+      constexpr int red     = kRed-10; 
+      constexpr int green   = kGreen-10;
+      constexpr int black   = kGray;
+      constexpr int white   = kWhite;
+      constexpr int grey    = kGray; 
+      constexpr int pink    = kPink; 
+      constexpr int magenta = kMagenta-10;
+      constexpr int violet  = kViolet-9; 
+      constexpr int orange  = kOrange-9; 
+      constexpr int spring  = kSpring+10; 
+      constexpr int teal    = kTeal-4;
+      constexpr int cyan    = kCyan-10; 
+      constexpr int azure   = kAzure-9; 
+      constexpr int yellow  = kYellow-10; 
+      constexpr int brown   = red-5; 
+    } //HistUtils::Color::Light
+  } // HistUtils::Color
+  namespace Format {
+    static std::string fmtEng(double value,int ndigits,int nval,bool numeric=true) {
+#define MICRO "µ"
+#define PREFIX_START (-24) // Smallest power of ten for which there is a prefix defined. If the set of prefixes will be extended, change this constant and update the table "prefix".
+      static std::vector<std::string> prefix = { "y", "z", "a", "f", "p", "n", MICRO, "m", "", "k", "M", "G", "T", "P", "E", "Z", "Y" }; 
+#define PREFIX_END PREFIX_START+(prefix.size()*3)
+      static char result[512];
+      int expof10;
+      // trivial return
+      if (value == 0.) { return std::string("0.0"); }
+      // negative number
+      std::string rstr;
+      if ( value < 0. ) { rstr += std::string("-"); value = std::abs(value); }
+      //
+      // log10(value)     expof10    log10(value)   expof10
+      //      1              0          -1           -3       
+      //      2              0          -2           -3
+      //      3              3          -3           -6
+      //      4              3          -4           -6
+      //      5              3          -5           -6
+      //      6              6          -6           -9        
+      //     ...            ...         ...          ...   
+      expof10  =  (int)std::log10(value); if( expof10 > 0 ) { expof10 = (expof10/3)*3; } else if ( expof10 < 0 ) { expof10 = (-expof10+3)/3*(-3); } 
+      if ( expof10 != 0 ) { value   *= std::pow(10,-expof10); } // DIVISION - expof10 may be negative!
+      // reduce to smallest decade
+      while ( value >= 1000. ) { value /= 1000.; expof10 += 3; }
+      // construct final string 
+      if ( numeric || (expof10 < static_cast<int>(PREFIX_START) ) || (expof10 > static_cast<int>(PREFIX_END)) ) {
+	if ( expof10 > 0 ) {  
+	  sprintf(result, "%*.*fe+%02i",nval+ndigits+1,ndigits,value,std::abs(expof10));
+	} else if ( expof10 < 0 ) { 
+	  sprintf(result, "%*.*fe-%02i",nval+ndigits+1,ndigits,value,std::abs(expof10));
+	} else {
+	  sprintf(result, "%*.*f",nval+ndigits+1,ndigits,value);
+	}
+      } else {
+	size_t idx((expof10-PREFIX_START)/3);
+	if ( idx < prefix.size() ) { 
+	  sprintf(result, "%*.*f %s", nval+ndigits+1, ndigits, value, prefix.at(idx).c_str());
+	} else { 
+	  sprintf(result, "%*.*f [UNKNOWN]", nval+ndigits+1, ndigits, value);
+	}
+      }
+      rstr += std::string(result); 
+      return rstr;
+    }
+    static std::string fmtNumber(double value) { return fmtEng(value,3,3); } 
+  } // HistUtils::Format
+} // HistUtils
 #endif
