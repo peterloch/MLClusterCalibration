@@ -44,6 +44,8 @@ root -l -b -q plotPiCharged.C++
 
 ## Generating summary plots
 
+### 2-dimensional response distributions
+
 The final formatting and display of the distributions created by the plotting scripts is done using the `plotCusters.C` macro. It is invoked by 
 ```
 root -l 'plotClusters.C++("ml_pions.hist.root","plots",50)'
@@ -60,3 +62,25 @@ with
 | `<input_file_name>`       | `"ml_pions.hist.root"` | Name of input file produced by one of the plotting scripts                                     |
 | `<output_plot_directory>` | `"plots"`              | Name of directory to store in produced plots in (see remarks below)                            |
 | `<minimum_entries>`       | `50`                   | Minimum entries required in a histogram slice to calculate the average and standard deviations |
+
+The script geberates the fully formatted plots and saves them into the directory `<output_plot_directory` which is expected to exist in the same directory as the input file. **This directory needs to be created before running the script for the first time!** In case the directory is already existing, the files in it will be overwritten. 
+
+Each plot is saved as a PDf and a PNG file (two files per plot). In addition, all distributions, graphs and canvases are saved into a `ROOT` file for further analysis and/or display. The output file name is constructed internally using the first part of the input file name, e.g. input file name `ml_jets.hist.root` yields output file name `ml_jets_summary.root`. The output file is saved in the present working directory.
+
+#### Example for plot storage
+
+| Input file file name               | Directory for files with plots | Output file               |
+| ---------------------------------- | ------------------------------ | ------------------------- |
+| `ml_pions.hist.root`               | `./plots`                      | `./ml_pions_summary.root` |
+| `my_analysis/ml_pions.hist.root`   | `./my_analysis/plots`          | `./ml_pions_summary.root` |
+| `/home/me/test/ml_pions.hist.root` | `/home/me/test/plots`          | `./ml_pions_summary.root` |
+
+### Graphs with averages and errors
+
+The graphs shown in the scatter plots can be plotted without the distributions. This is done by
+```
+root -l 'plotSummary.C++("ml_pions_summary.root","RMS")'
+```
+The input arguments for this macro are the input file name (no default, must be supplied by the user) and the error bar option (default is `"RMS"`, meaning the errors shown in the plots are the standard deviations. If the option `"ERR"` is given, the error of the means will be shown instead. Both the standard deviations as well as the errors are asymmetric. The results will be stored in a `plots` which is in the same path as the input file.[^3]
+
+[^3]: 🛠️:exclamation::exclamation: There is a limitation in the present implementation of `plotSummary.C`. To avoid crashes and unpredictable behaviour, the input file name should always contain a path. This means that instead of using `ml_jets_summary.root` one should use `./ml_jets_summary.root` if the input file is in the present working directory. The `plots` directory needs to exist, as in case of the plots with the distributions.
