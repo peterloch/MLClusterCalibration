@@ -9,6 +9,7 @@ This respository contains code to plot responses and other cluster features in t
 ### Making response plots
 
 ![Workflow for filling distributions](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.png)
+[:link: PDF file](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.pdf) [:link: JPEG file](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.jpg)
 
 The typical workflow for making plots to evaluate the topo-cluster response as function of cluster signals and moments (inputs to the DNN calibration) comprise 1️⃣ the transformation of the testing output to `root` files with a tree `ClusterTree` (default) as needed, followed by 2️⃣ the filling and storing of (mostly) 2-dimensional histgrams showing the responses at various scales (EM, LCW and ML-based). 
 
