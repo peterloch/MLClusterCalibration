@@ -39,7 +39,7 @@ The plotting scripts are simply run by[^2]
 root -l -b -q plotPiCharged.C++
 ```
 
-[^1]: :hammer_and_wrench: Allow user-defined file names in plotting scripts `plotPi.C`, `plotPi0.C`, `plotPiCharged.C` and `plotJets.c`.
+[^1]: :hammer_and_wrench: TODO: allow user-defined file names in plotting scripts `plotPi.C`, `plotPi0.C`, `plotPiCharged.C` and `plotJets.c`.
 [^2]: <a name="compile">It is recommended to run the scripts in batch mode (`-b` option in the `root` command line &ndash; the `-q` option just terminates `root` after the script is executed. Also, to speed up future invacations of the plotting script, it is useful to compile the script by adding the `++` after the file extension `.C` when compiling the script for the first time orr after `ClusterTreePlotter.C` has been changed. A repeated invocation of the same script can then use the command line `root -l -b -q plotPiCharged.C+` with the a single `+` added after the file extension.</a> 
 
 ## Generating summary plots
@@ -81,6 +81,6 @@ The graphs shown in the scatter plots can be plotted without the distributions. 
 ```
 root -l 'plotSummary.C++("ml_pions_summary.root","RMS")'
 ```
-The input arguments for this macro are the input file name (no default, must be supplied by the user) and the error bar option (default is `"RMS"`, meaning the errors shown in the plots are the standard deviations. If the option `"ERR"` is given, the error of the means will be shown instead. Both the standard deviations as well as the errors are asymmetric. The results will be stored in a `plots` which is in the same path as the input file.[^3]
+The input arguments for this macro are the input file name (no default, must be supplied by the user) and the error bar option (default is `"RMS"`, meaning the errors shown in the plots are the standard deviations. If the option `"ERR"` is given, the error of the means will be shown instead. Both the standard deviations as well as the errors on the mean are asymmetric. The results will be stored in a `plots` which is in the same path as the input file.[^3]
 
 [^3]: 🛠️:exclamation::exclamation: There is a limitation in the present implementation of `plotSummary.C`. To avoid crashes and unpredictable behaviour, the input file name should always contain a path. This means that instead of using `ml_jets_summary.root` one should use `./ml_jets_summary.root` if the input file is in the present working directory. The `plots` directory needs to exist, as in case of the plots with the distributions.
