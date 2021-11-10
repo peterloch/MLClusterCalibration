@@ -6,14 +6,23 @@ This respository contains code to plot responses and other cluster features in t
 
 ## Workflow
 
+The general workflow of this package follows several steps. 
+
 ### Making response plots
 
 ![Workflow for filling distributions](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.png)
 [:link: PDF file](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.pdf) [:link: JPEG file](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.jpg)
 
-The typical workflow for making plots to evaluate the topo-cluster response as function of cluster signals and moments (inputs to the DNN calibration) comprise 1️⃣ the transformation of the testing output to `root` files with a tree `ClusterTree` (default) as needed, followed by 2️⃣ the filling and storing of (mostly) 2-dimensional histgrams showing the responses at various scales (EM, LCW and ML-based). 
+The typical workflow for making plots to evaluate the topo-cluster response as function of cluster signals and moments (inputs to the DNN calibration) comprise 1️⃣ the transformation of the testing output to `root` files with a tree `ClusterTree` (default) as needed, followed by 2️⃣ the filling and storing of (mostly) 2-dimensional histograms showing the responses together with kinematic variables of the cluster, both at various scales (EM, LCW and ML-based). In addition, distributions of kinematic variables of the particles (in case of topo-clusters from pions) and the jets (in case of topo-clusters in jets) are produced. All other scripts producing summary plots use the distributions generated in step 2️⃣ to extract additional features or calculate average behaviours. 
 
-## Generating response plots 🆕
+The code needed for these two steps is:
+
+1. [`readCSV.C`](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/readCSV.C) is a simple script reading a CSV file with column headers and saving its content into a ROOT tuple (`TTree`). This script is only needed if the DNN testing output is not directly available in a ROOT tree with known branch names.
+2.  
+
+
+
+## Generating response plots
 
 Plotting uses the `ROOT` tuple as input. This tuple can be constructed from a csv file by 
 ```
