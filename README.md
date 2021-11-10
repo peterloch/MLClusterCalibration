@@ -17,8 +17,8 @@ The typical workflow for making plots to evaluate the topo-cluster response as f
 
 The code needed for these two steps is:
 
-1. [`readCSV.C`](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/readCSV.C) is a simple script reading a CSV file with column headers and saving its content into a ROOT tuple (`TTree`). This script is only needed if the DNN testing output is not directly available in a ROOT tree with known branch names.
-2.  
+- :one: This step needs the [`readCSV.C`](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/readCSV.C) script which reads a CSV file with column headers and saving its content into a ROOT tuple (`TTree`). This script is only needed if the DNN testing output is not directly available in a ROOT tree with known branch names. It uses the [`TTree::ReadFile`](https://root.cern/doc/master/classTTree.html#a9c8da1fbc68221b31c21e55bddf72ce7) method to fill the tree (link points to the ROOT reference manual).
+- :two: In this step the actual collection of the data into the various 
 
 
 
