@@ -8,7 +8,7 @@ This respository contains code to plot responses and other cluster features in t
 1. [Setup](#setup)
 1. [Workflow](#workflow) 
    1. [Filling response and other distributions](#workflow_fill)
-   1. [Making response plots](#workflow_plots)
+   1. [Refined analysis](#workflow_plots)
 1. [Analyzing response](#analysis)
    1. [Converting and collecting data](#analysis_fill)
    2. [Fully formatted response plots](#analysis_plot)
@@ -23,8 +23,8 @@ The code in this repository supports a basic workflow consisting of two blocks. 
 
 ### <a name="workflow_fill">Filling response and other distributions</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
-![Workflow for filling distributions](root/doc/PlotWorkFlow.png)
-[:link: PDF file](root/doc/PlotWorkFlow.pdf) [:link: JPEG file](root/doc/PlotWorkFlow.jpg)
+![Workflow for filling distributions](root/doc/PlotWorkFlow_1_2.png)
+[:link: PDF file](root/doc/PlotWorkFlow_1_2.pdf) [:link: JPEG file](root/doc/PlotWorkFlow_1_2.jpg)
 
 The typical workflow for making plots to evaluate the topo-cluster response as function of cluster signals and moments (inputs to the DNN calibration) comprise 1️⃣ the transformation of the testing output to `root` files with a tree `ClusterTree` (default) as needed, followed by 2️⃣ the filling and storing of (mostly) 2-dimensional histograms showing the responses together with kinematic variables of the cluster, both at various scales (EM, LCW and ML-based). In addition, distributions of kinematic variables of the particles (in case of topo-clusters from pions) and the jets (in case of topo-clusters in jets) are produced. All other scripts producing summary plots use the distributions generated in step 2️⃣ to extract additional features or calculate average behaviours. 
 
@@ -38,7 +38,17 @@ The code needed for these two steps is:
   - [`plotJets.C`](root/plotJets.C) extracts topo-clusters from jets stored in `ml_jets.root`, fills the distributions for the _topo-cluster-in-jet_ response and saves them to `ml_jets.hist.root`.
  
 
-### <a name="workflow_plots">Making response plots</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+### <a name="workflow_plots">Refined analysis</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+
+![Workflow for plotting distributions](root/doc/PlotWorkFlow_3_4.png)
+[:link: PDF file](root/doc/PlotWorkFlow_3_4.pdf) [:link: JPEG file](root/doc/PlotWorkFlow_3_4.jpg)
+
+The workflow combining step 1️⃣ and 2️⃣ described above produces the inputs for more refined analyses with well-formatted plots. The common data used by these analyses are contained in `ml_pions.hist.root` and `ml_jets.hist.root`, respectively. Step 3️⃣ shown in the schematics above is the first step in the analysis workflow, where well-formatted plots are produced and graphs of the average response with error bars representing both the RMS and the error on the averages are stored. In the following step 4️⃣ plots of these graphs or plots of the response functions in bins of various observables are produced.
+
+- 3️⃣ In this step the [`plotClusters.C`](root/plotClusters.C) macro is used to produce plots of the response distributions filled in step 2️⃣ overlaid with the averages and error bars indicating the asymmetric RMS of the response distribution.
+- 4️⃣ This step collects all modules for refined analysis. Presently available are:
+  - [`plotSummary.C`](root/plotSummary.C) loads the graphs produced in 3️⃣  and produces plots overlaying the average response as functions of various DNN inputs for EM, LCW and ML-based response scales;
+  - [`plotResponseHists.C`](root/plotResponseHists.C) extracts the response functions at EM, LCW and ML-based scales and produces plots overlaying those in each bin of the DNN input variables. 
 
 ## <a name="analysis">Analyzing response</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
@@ -107,7 +117,7 @@ Each plot is saved as a PDF and a PNG file (two files per plot). In addition, al
 | `my_analysis/ml_pions.hist.root`   | `./my_analysis/plots`          | `./ml_pions_summary.root` |
 | `/home/me/test/ml_pions.hist.root` | `/home/me/test/plots`          | `./ml_pions_summary.root` |
    
-### <a name="analysis_graph">Graphs with averages and errors</a> &nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+### <a name="analysis_graph">Graphs with averages and errors</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
 The graphs shown in the scatter plots can be plotted without the distributions. This is done by
 ```
