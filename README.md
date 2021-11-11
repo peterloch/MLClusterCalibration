@@ -1,4 +1,4 @@
-# MLClusterCalibration
+# <a name="top">MLClusterCalibration</a>
 
 This respository contains code to plot responses and other cluster features in the context of the ML-based topo-cluster calibration project. In addition several scripts are available converting inputs from root to csv and vice versa, setup the environment and others. 
 
@@ -8,13 +8,13 @@ This respository contains code to plot responses and other cluster features in t
    1. [Filling response and other distributions](#workflow_fill)
    1. [Making response plots](#workflow_plots)
  
-## <a name="setup">Setup</a>&nbsp;&nbsp;&nbsp;[:arrow_heading_up: table of content](#toc)
+## <a name="setup">Setup</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/heading-up.png)](#top)
 
-## <a name="workflow">Workflow</a>
+## <a name="workflow">Workflow</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/heading-up.png)](#top)
 
 The general workflow of this package follows several steps. 
 
-### <a name="workflow_fill">Filling response and other distributions</a>
+### <a name="workflow_fill">Filling response and other distributions</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/heading-up.png)](#top)
 
 ![Workflow for filling distributions](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.png)
 [:link: PDF file](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.pdf) [:link: JPEG file](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/PlotWorkFlow.jpg)
@@ -31,7 +31,7 @@ The code needed for these two steps is:
   - `plotJets.C` extracts topo-clusters from jets stored in `ml_jets.root`, fills the distributions for the _topo-cluster-in-jet_ response and saves them to `ml_jets.hist.root`.
  
 
-### <a name="workflow_plots">Making response plots</a>
+### <a name="workflow_plots">Making response plots</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](https://github.com/peterloch/MLClusterCalibration/blob/Plotters/root/doc/heading-up.png)](#top)
 
 
 
