@@ -8,7 +8,7 @@ This respository contains code to plot responses and other cluster features in t
 1. [Setup](#setup)
 1. [Workflow](#workflow) 
    1. [Filling response and other distributions](#workflow_fill)
-   1. [Making response plots](#workflow_plots)
+   1. [Refined analysis](#workflow_plots)
 1. [Analyzing response](#analysis)
    1. [Converting and collecting data](#analysis_fill)
    2. [Fully formatted response plots](#analysis_plot)
@@ -23,8 +23,8 @@ The code in this repository supports a basic workflow consisting of two blocks. 
 
 ### <a name="workflow_fill">Filling response and other distributions</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
-![Workflow for filling distributions](root/doc/PlotWorkFlow.png)
-[:link: PDF file](root/doc/PlotWorkFlow.pdf) [:link: JPEG file](root/doc/PlotWorkFlow.jpg)
+![Workflow for filling distributions](root/doc/PlotWorkFlow_1_2.png)
+[:link: PDF file](root/doc/PlotWorkFlow_1_2.pdf) [:link: JPEG file](root/doc/PlotWorkFlow_1_2.jpg)
 
 The typical workflow for making plots to evaluate the topo-cluster response as function of cluster signals and moments (inputs to the DNN calibration) comprise 1️⃣ the transformation of the testing output to `root` files with a tree `ClusterTree` (default) as needed, followed by 2️⃣ the filling and storing of (mostly) 2-dimensional histograms showing the responses together with kinematic variables of the cluster, both at various scales (EM, LCW and ML-based). In addition, distributions of kinematic variables of the particles (in case of topo-clusters from pions) and the jets (in case of topo-clusters in jets) are produced. All other scripts producing summary plots use the distributions generated in step 2️⃣ to extract additional features or calculate average behaviours. 
 
@@ -38,7 +38,17 @@ The code needed for these two steps is:
   - [`plotJets.C`](root/plotJets.C) extracts topo-clusters from jets stored in `ml_jets.root`, fills the distributions for the _topo-cluster-in-jet_ response and saves them to `ml_jets.hist.root`.
  
 
-### <a name="workflow_plots">Making response plots</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+### <a name="workflow_plots">Refined analysis</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+
+![Workflow for plotting distributions](root/doc/PlotWorkFlow_3_4.png)
+[:link: PDF file](root/doc/PlotWorkFlow_3_4.pdf) [:link: JPEG file](root/doc/PlotWorkFlow_3_4.jpg)
+
+The workflow combining step 1️⃣ and 2️⃣ described above produces the inputs for more refined analyses with well-formatted plots. The common data used by these analyses are contained in `ml_pions.hist.root` and `ml_jets.hist.root`, respectively. Step 3️⃣ shown in the schematics above is the first step in the analysis workflow, where well-formatted plots are produced and graphs of the average response with error bars representing both the RMS and the error on the averages are stored. In the following step 4️⃣ plots of these graphs or plots of the response functions in bins of various observables are produced.
+
+- 3️⃣ In this step the [`plotClusters.C`](root/plotClusters.C) macro is used to produce plots of the response distributions filled in step 2️⃣ overlaid with the averages and error bars indicating the asymmetric RMS of the response distribution.
+- 4️⃣ This step collects all modules for refined analysis. Presently available are:
+  - [`plotSummary.C`](root/plotSummary.C) loads the graphs produced in 3️⃣  and produces plots overlaying the average response as functions of various DNN inputs for EM, LCW and ML-based response scales;
+  - [`plotResponseHists.C`](root/plotResponseHists.C) extracts the response functions at EM, LCW and ML-based scales and produces plots overlaying those in each bin of the DNN input variables. 
 
 ## <a name="analysis">Analyzing response</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
@@ -92,7 +102,7 @@ with
 | Argument                  | Default setting        | Description                                                                                    |
 | ------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
 | `<input_file_name>`       | `"ml_pions.hist.root"` | Name of input file produced by one of the plotting scripts                                     |
-| `<output_plot_directory>` | `"plots"`              | Name of directory to store in produced plots in (see remarks below)                            |
+| `<output_plot_directory>` | `"plots"`              | Name of directory to store produced plots in (see remarks below)                               |
 | `<minimum_entries>`       | `50`                   | Minimum entries required in a histogram slice to calculate the average and standard deviations |
 
 The script generates the fully formatted plots and saves them into the directory `<output_plot_directory` which is expected to exist in the same directory as the input file. **This directory needs to be created before running the script for the first time!** In case the directory is already existing, the files in it will be overwritten. 
@@ -107,16 +117,51 @@ Each plot is saved as a PDF and a PNG file (two files per plot). In addition, al
 | `my_analysis/ml_pions.hist.root`   | `./my_analysis/plots`          | `./ml_pions_summary.root` |
 | `/home/me/test/ml_pions.hist.root` | `/home/me/test/plots`          | `./ml_pions_summary.root` |
    
-### <a name="analysis_graph">Graphs with averages and errors</a> &nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+### <a name="analysis_graph">Graphs with averages and errors</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
 The graphs shown in the scatter plots can be plotted without the distributions. This is done by
 ```
 root -l 'plotSummary.C++("./ml_pions_summary.root","RMS")'
 ```
-The input arguments for this macro are the input file name (no default, must be supplied by the user) and the error bar option (default is `"RMS"`, meaning the error bars shown in the plots represent the standard deviations). If the option `"ERR"` is given, the error of the means will be shown instead. Both the standard deviations as well as the errors on the mean are asymmetric. The results will be stored in a `plots` which is in the same path as the input file.[^4]
+The input arguments for this macro are the input file name (no default, must be supplied by the user) and the error bar option (default is `"RMS"`, meaning the error bars shown in the plots represent the standard deviations). If the option `"ERR"` is given, the error of the means will be shown instead. Both the standard deviations as well as the errors on the mean are asymmetric. The results will be stored in the `plots` directory which needs to be in the same path as the input file.[^4]
+
+The `plotSummary.C` macro has two arguments,
+```
+plotSummary(<input_file_name>,<error_bar_option>)
+```
+with 
+| Argument                  | Default setting    | Description                                                                                    |
+| ------------------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `<input_file_name>`       | &laquo;none&raquo; | Name of input file produced in step 3️⃣                                                         |
+| `<error_bar_option>`      | `"RMS"`            | Option for error bars, possible values are `"ERR"` for errors of the mean and `"RMS"` for RMS  |
+
+Each produced plot shows the average response with the selected option for the error bars, with EM, LCW and MC-based scales orverlaid, as a function of the studied DNN input variables. Each plot is stored as PDF and as PNG file (both generated by ROOT) in the `plots` directory. This macro does not produce any further output. 
+
+### <a name="analysis_hists">Response functions in bins of DNN inputs</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+
+The response function in each bin of a given DNN input variable are produced using the ROOT batch mode by 
+```
+root -l -b -q 'plotResponseHists.C++("ml_jets_summary.root","plots/hists",true)'
+```
+This is highly recommended, as the `plotResponseHists.C` macro produces a large number of canvases, which may slow down its execution significantly if all of those are shown on the terminal (like in an interactive ROOT session). The script can be executed in full interactive mode by 
+```
+root -l 'plotResponseHists.C++("ml_jets_summary.root","plots/hists",false)'
+```
+which requires keyboard input after each canvas is shown offering the option to terminate the script.  
+
+The `plotResponseHists.C` macro has three arguments, two of which are mandatory,
+```
+plotResponseHists(<input_file_name>,<output_plot_directory>,<batch_mode_flag>)
+```
+with 
+| Argument                  | Default setting        | Description                                                                                    |
+| ------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
+| `<input_file_name>`       | &laquo;none&raquo;     | Name of input file produced in step 3️⃣                                                         |
+| `<output_plot_directory>` | &laquo;none&raquo;     | Name of directory to store produced plots in                                                   |
+| `<batch_mode_flag>`       | `false`                | Flag indicating interactive (`false`) or batch mode (`true`)                                   |
 
 
 [^1]: The Summer 2020/2021 student projects uses python-generated CSV files as input for training and as output from testing. The internal tabuiar stucture of these files is shown in   
 [^2]: :hammer_and_wrench: TODO: allow user-defined file names in plotting scripts `plotPi.C`, `plotPi0.C`, `plotPiCharged.C` and `plotJets.c`.
 [^3]: <a name="compile">It is recommended to run the scripts in batch mode (`-b` option in the `root` command line &ndash; the `-q` option just terminates `root` after the script is executed. Also, to speed up future invacations of the plotting script, it is useful to compile the script by adding the `++` after the file extension `.C` when compiling the script for the first time orr after `ClusterTreePlotter.C` has been changed. A repeated invocation of the same script can then use the command line `root -l -b -q plotPiCharged.C+` with the a single `+` added after the file extension.</a> 
-[^4]: 🛠️:exclamation::exclamation: There is a limitation in the present implementation of `plotSummary.C`. To avoid crashes and unpredictable behaviour, the input file name should always contain a path. This means that instead of using `ml_jets_summary.root` one should use `./ml_jets_summary.root` if the input file is in the present working directory. The `plots` directory needs to exist, as in case of the plots with the distributions.
+[^4]: 🛠️:exclamation::exclamation: There is a limitation in the present implementation of `plotSummary.C`. To avoid crashes and unpredictable behaviour, the input file name should always contain a path. This means that instead of using `ml_jets_summary.root` one should use `./ml_jets_summary.root` if the input file is in the present working directory. The `plots` directory needs to exist, as in case of the plots with the distributions. Future implementations should allow the user to provide a valid path other than this default option.  
