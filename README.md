@@ -42,7 +42,7 @@ The code needed for these two steps is:
 
 ## <a name="analysis">Analyzing response</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
-### <a name="analysis_fill">Connverting and collecting data</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
+### <a name="analysis_fill">Converting and collecting data</a>&nbsp;&nbsp;&nbsp;[![TableOfContent](root/doc/back-to-top.png)](#top)
 
 Various distributions are filled from the ROOT tree in `ml_pions.root` or `ml_jets.root`. The respective trees can be filled from tabular data stored in a CSV file. The first entry (row) in this file should contain a comma-separated list of column headers, which are used as branch names in the `ClusterTree` tree created for storage of the data in ROOT files. The following command line produces the file `ml_pions.root` for test/trainig results for topo-clusters in single pion events stored in a (text) file `results.csv`.    
 ```
@@ -54,7 +54,7 @@ root -l `readCSV.C("results.csv","ml_jets.root")'
 ```
 creates the ROOT file with the same tree `ClusterTree` as for single pions, with slightly different branches for the cluster source &ndash; for pions the particle kinematics and the particle identification code are provided, while for jets the kinematic at fully calibrated scale and at constituent scale are stored together with the corresponding matching truth jet variables. **It is highly recommended to use the output (ROOT) file names given in these examples. They are expected by the plotting scripts.**[^2]
 
-Next, the main plotter module coded in [`ClusterTreePlotter.C`](root/ClusterTreePlotter.C) is run. This module is universal, it can be used for topo-clusters from single pions as well as those from jets. It will configure and fill source-sepcific plots automatically. In additoin, it produces an output file with a presently hard-coded name `ml_pions.hist.root` for pions (same for neutral, charged or mixed samples) and `ml_jets.hist.root` for jets. These outputs (mostly 2-dimensional hstograms of type `TH2D`) are used for further analysis.
+Next, the main plotter module coded in [`ClusterTreePlotter.C`](root/ClusterTreePlotter.C) is run. This module is universal, it can be used for topo-clusters from single pions as well as those from jets. It will configure and fill source-sepcific plots automatically. In additoin, it produces an output file with a presently hard-coded name `ml_pions.hist.root` for pions (same for neutral, charged or mixed samples) and `ml_jets.hist.root` for jets. These outputs (mostly 2-dimensional histograms of type [`TH2D`](https://root.cern/doc/master/classTH2D.html)) are used for further analysis.
 
 It is recommended to not use `ClusterTeePlotter.C` directly. Rather, use the specific scripts provided for the plotting:
 
